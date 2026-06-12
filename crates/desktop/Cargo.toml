@@ -1,0 +1,18 @@
+[package]
+name = "desktop"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+app_core = { path = "../app_core" }
+tauri = { version = "2", features = [] }
+tauri-plugin-axum = "0.10"
+keyring-core = "1.0.0"
+windows-native-keyring-store = "1.1.0"
+axum = { workspace = true }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+reqwest = { workspace = true }

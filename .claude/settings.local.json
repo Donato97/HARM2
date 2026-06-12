@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Read(//c/Users/Donato Bitetto/dev_kb/**)",
+      "Bash(ls solutions/)"
+    ]
+  }
+}

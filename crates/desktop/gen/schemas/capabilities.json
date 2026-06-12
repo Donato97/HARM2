@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Capabilities di default per la finestra principale","local":true,"windows":["main"],"permissions":["core:default","axum:default"]}}

@@ -1,0 +1,5 @@
+[alias]
+# Lancia la versione web (server Axum standalone su http://localhost:3000)
+web = "run -p web"
+# Lancia la versione desktop (app Tauri v2)
+desktop = "run -p desktop"
