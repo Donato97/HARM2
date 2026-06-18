@@ -2,14 +2,18 @@ use maud::{html, Markup};
 
 use crate::layouts;
 
-pub async fn index() -> Markup {
+pub struct Props {
+    pub path: String,
+}
+
+pub fn index(props: Props) -> Markup {
     let markup = html! {
-        div id="root" {}
+        h1 { "Games" }
     };
 
     let layout_props = layouts::default::Props {
+        path: props.path,
         slot: markup,
-        path: "".to_string(),
     };
 
     layouts::default(layout_props)

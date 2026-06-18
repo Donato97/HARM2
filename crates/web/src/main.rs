@@ -1,11 +1,12 @@
 use time::Duration;
 
 use app_core::{AppState, CustomPool};
-use axum::routing::post;
+use axum::{middleware, routing::post};
+use tower_http::services::ServeDir;
 use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::SqliteStore;
 
-use crate::features::auth::handlers::{sign_in, sign_out, sign_up};
+use crate::features::auth;
 
 pub mod routes;
 pub mod features {
@@ -28,13 +29,21 @@ async fn main() {
         .with_secure(false)
         .with_expiry(Expiry::OnInactivity(Duration::days(7)));
 
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .expect("Creazione del client reqwest fallita!");
+
     let routes = app_core::router()
-        .route("/sign-up", post(sign_up))
-        .route("/sign-in", post(sign_in))
-        .route("/sign-out", post(sign_out))
+        .route("/sign-up", post(auth::handlers::sign_up))
+        .route("/sign-in", post(auth::handlers::sign_in))
+        .route("/sign-out", post(auth::handlers::sign_out))
+        .layer(middleware::from_fn(auth::handlers::middleware))
         .layer(session_layer)
+        .nest_service("/assets", ServeDir::new("dist/assets"))
         .with_state(AppState {
             pool: CustomPool::Sqlite(pool),
+            http_client: client,
         });
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

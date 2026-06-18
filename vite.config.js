@@ -7,7 +7,11 @@ export default defineConfig({
   build: {
     manifest: true,
     rollupOptions: {
-      input: "frontend/main.tsx",
+      input: {
+        editor: "frontend/editor.tsx",
+        htmx: "frontend/htmx.ts",
+        css: "frontend/style.css",
+      },
     },
   },
 });

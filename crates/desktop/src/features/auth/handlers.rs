@@ -1,25 +1,22 @@
-use std::error::Error;
-
-use app_core::helper::markup_errors::{bad_request, server_error, AppResponse};
+use app_core::{
+    helper::markup_errors::{bad_request, server_error, AppResponse},
+    AppState,
+};
 use axum::{
     body::to_bytes,
-    extract::Request,
+    extract::{Request, State},
     response::{IntoResponse, Redirect},
 };
 use reqwest::Method;
 
-pub async fn sign_up(request: Request) -> AppResponse {
+pub async fn sign_up(State(state): State<AppState>, request: Request) -> AppResponse {
     let (parts, body) = request.into_parts();
 
     let headers = parts.headers;
     let bytes = to_bytes(body, usize::MAX).await.map_err(server_error)?;
 
-    let client = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .map_err(server_error)?;
-
-    let result = client
+    let result = state
+        .http_client
         .request(Method::POST, "http://localhost:3000/sign-up")
         .headers(headers)
         .body(bytes)
@@ -43,18 +40,14 @@ pub async fn sign_up(request: Request) -> AppResponse {
     Ok(Redirect::to("/").into_response())
 }
 
-pub async fn sign_in(request: Request) -> AppResponse {
+pub async fn sign_in(State(state): State<AppState>, request: Request) -> AppResponse {
     let (parts, body) = request.into_parts();
 
     let headers = parts.headers;
     let bytes = to_bytes(body, usize::MAX).await.map_err(server_error)?;
 
-    let client = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .map_err(server_error)?;
-
-    let result = client
+    let result = state
+        .http_client
         .request(Method::POST, "http://localhost:3000/sign-in")
         .headers(headers)
         .body(bytes)
@@ -78,19 +71,15 @@ pub async fn sign_in(request: Request) -> AppResponse {
     Ok(Redirect::to("/").into_response())
 }
 
-pub async fn sign_out() -> AppResponse {
+pub async fn sign_out(State(state): State<AppState>) -> AppResponse {
     let keychain =
         keyring_core::Entry::new("com.harm2.desktop", "session_token").map_err(server_error)?;
 
     let token = keychain.get_password().map_err(server_error)?;
 
-    let client = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .map_err(server_error)?;
-
-    client
-        .request(Method::POST, "http://localhost:3000/logout")
+    state
+        .http_client
+        .request(Method::POST, "http://localhost:3000/sign-out")
         .header("Cookie", format!("id={}", token))
         .send()
         .await

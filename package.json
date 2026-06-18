@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build --watch",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -11,6 +11,7 @@
     "@lexical/list": "^0.45.0",
     "@lexical/rich-text": "^0.45.0",
     "@lexical/selection": "^0.45.0",
+    "htmx.org": "^4.0.0-beta4",
     "lexical": "^0.45.0",
     "solid-js": "^1.9.3"
   },

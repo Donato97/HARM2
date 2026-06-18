@@ -20,4 +20,6 @@ tower-http = { workspace = true }
 tower-sessions = { workspace = true }
 tower-sessions-sqlx-store = { workspace = true }
 time = { workspace = true }
+reqwest = { workspace = true }
+
 argon2 = { version = "0.5.3", features = ["std"] }

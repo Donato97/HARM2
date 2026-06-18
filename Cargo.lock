@@ -59,6 +59,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "maud",
+ "reqwest",
  "sea-query",
  "sea-query-binder",
  "serde",
@@ -5533,6 +5534,7 @@ dependencies = [
  "argon2",
  "axum",
  "maud",
+ "reqwest",
  "sea-query",
  "serde",
  "serde_json",

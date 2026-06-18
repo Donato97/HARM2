@@ -1,11 +1,43 @@
 @import "tailwindcss";
 @plugin "@iconify/tailwind4";
-@plugin "daisyui";
+@plugin "daisyui" {
+    themes: halloween --default;
+}
+
+:root {
+    scrollbar-color: unset;
+}
 
 body {
+    * {
+        &::-webkit-scrollbar {
+            width: 10px !important;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: var(--color-neutral-content) !important;
+            border-radius: 99px;
+            border: 3px solid var(--color-base-100) !important;
+        }
+    }
+
     *:focus {
         outline: none;
     }
+
+    *::selection {
+        @apply bg-primary/50;
+    }
+}
+
+nav ul a.menu-active::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -8px;
+    width: 3px;
+    height: 22px;
+    transform: translateY(-50%);
+    @apply bg-primary rounded-r-box;
 }
 
 #editor {

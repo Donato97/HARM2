@@ -46,10 +46,10 @@ export default function SlashMenu(props: Props) {
   return (
     <Show when={slash_menu.isOpen()}>
       <div
-        class="fixed z-50 scrollbar-gutter-stable max-h-200 overflow-y-auto"
+        class="fixed z-50 max-h-200 overflow-y-auto shadow-2xl rounded-box bg-base-300"
         style={{ left: `${slash_menu.pos.x}px`, top: `${slash_menu.pos.y}px` }}
       >
-        <ul class="menu bg-base-100 rounded-box shadow-2xl">
+        <ul class="menu">
           <For each={slash_menu.filteredItems()}>
             {(item, index) => (
               <li>

@@ -1,6 +1,3 @@
-use serde::Deserialize;
-use std::collections::HashMap;
-
 pub mod markup_errors {
     use std::error::Error;
 
@@ -38,16 +35,42 @@ pub mod markup_errors {
     }
 }
 
-#[derive(Deserialize, Debug)]
-pub struct ManifestEntry {
-    pub file: String,
-    pub css: Option<Vec<String>>,
-}
+pub mod vite {
+    use maud::{html, Markup};
+    use serde::Deserialize;
+    use std::{collections::HashMap, error::Error};
 
-pub type Manifest = HashMap<String, ManifestEntry>;
+    #[derive(Deserialize, Debug)]
+    struct ManifestEntry {
+        pub file: String,
+    }
 
-pub fn load_manifest() -> Result<Manifest, String> {
-    let manifest_path = "dist/.vite/manifest.json";
-    let manifest = std::fs::read_to_string(manifest_path).map_err(|e| e.to_string())?;
-    serde_json::from_str(&manifest).map_err(|e| e.to_string())
+    type Manifest = HashMap<String, ManifestEntry>;
+
+    fn load_manifest() -> Result<Manifest, Box<dyn Error>> {
+        let manifest_path = "dist/.vite/manifest.json";
+        let manifest = std::fs::read_to_string(manifest_path)?;
+        let json: Manifest = serde_json::from_str(&manifest)?;
+        Ok(json)
+    }
+
+    pub fn load_manifest_entry(file_name: &str) -> Markup {
+        let manifest = match load_manifest() {
+            Ok(manifest) => manifest,
+            Err(_) => return html! {},
+        };
+
+        match manifest.get(file_name) {
+            Some(entry) => {
+                if entry.file.ends_with(".css") {
+                    let markup = html! { link rel="stylesheet" href=(entry.file) {}; };
+                    markup
+                } else {
+                    let markup = html! { script src=(entry.file) type="module" {}; };
+                    markup
+                }
+            }
+            None => html! {},
+        }
+    }
 }

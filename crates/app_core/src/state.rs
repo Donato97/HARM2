@@ -11,6 +11,7 @@ pub enum CustomPool {
 #[derive(Clone, Debug)]
 pub struct AppState {
     pub pool: CustomPool,
+    pub http_client: reqwest::Client,
 }
 
 impl AppState {

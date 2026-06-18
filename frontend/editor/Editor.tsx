@@ -1,4 +1,9 @@
-import { createEditor, CreateEditorArgs } from "lexical";
+import {
+  $createParagraphNode,
+  $getRoot,
+  createEditor,
+  CreateEditorArgs,
+} from "lexical";
 import { HeadingNode, registerRichText } from "@lexical/rich-text";
 
 import { onCleanup, onMount } from "solid-js";
@@ -9,6 +14,8 @@ import {
   registerCheckList,
   registerList,
 } from "@lexical/list";
+import Title from "./Title";
+import EditorFileSystem from "./filesystem/EditorFileSystem";
 
 export default function Editor() {
   const config: CreateEditorArgs = {
@@ -27,6 +34,14 @@ export default function Editor() {
     const cleanupCheckList = registerCheckList(editor, {
       disableTakeFocusOnClick: true,
     });
+
+    editor.update(() => {
+      const root = $getRoot();
+      if (root.getFirstChild() === null) {
+        root.append($createParagraphNode());
+      }
+    });
+
     onCleanup(() => {
       cleanupRichText();
       cleanupList();
@@ -35,16 +50,21 @@ export default function Editor() {
   });
 
   return (
-    <main class="container h-screen flex flex-col items-center justify-center gap-6 mx-auto">
-      <h1 class="text-3xl font-bold">HARM2 — SolidJS + Axum + Maud</h1>
-      <div
-        id="editor"
-        class="h-1/2 w-full border border-base-100 bg-base-300 rounded-2xl p-4 overflow-y-auto"
-        contentEditable
-        ref={editorRef}
-      ></div>
+    <main class="h-screen mx-auto overflow-y-auto flex">
+      <EditorFileSystem />
 
-      <SlashMenu editor={editor} />
+      <div class="max-w-prose mx-auto py-20">
+        <Title onEnter={() => editor.focus()} />
+
+        <div
+          id="editor"
+          class="h-full w-full rounded-2xl p-4 mt-4"
+          contentEditable
+          ref={editorRef}
+        ></div>
+
+        <SlashMenu editor={editor} />
+      </div>
     </main>
   );
 }

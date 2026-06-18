@@ -7,7 +7,8 @@ use argon2::{
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
 use axum::{
-    extract::State,
+    extract::{Request, State},
+    middleware::Next,
     response::{IntoResponse, Redirect},
     Form,
 };
@@ -112,4 +113,27 @@ pub async fn sign_out(session: Session) -> AppResponse {
     session.flush().await.map_err(server_error)?;
 
     Ok(Redirect::to("/sign-in").into_response())
+}
+
+pub async fn middleware(session: Session, req: Request, next: Next) -> AppResponse {
+    let session_user = session
+        .get::<SessionUser>("user")
+        .await
+        .map_err(server_error)?;
+
+    let path = req.uri().path();
+
+    if session_user.is_some() {
+        if path != "/sign-in" && path != "/sign-up" {
+            Ok(next.run(req).await.into_response())
+        } else {
+            Ok(Redirect::to("/").into_response())
+        }
+    } else {
+        if path == "/sign-in" || path == "/sign-up" {
+            Ok(next.run(req).await.into_response())
+        } else {
+            Ok(Redirect::to("/sign-in").into_response())
+        }
+    }
 }

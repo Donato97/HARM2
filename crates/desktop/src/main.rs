@@ -25,6 +25,11 @@ async fn main() {
         .await
         .expect("Connessione al DB fallita!");
 
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .expect("Creazione del client reqwest fallita!");
+
     let router = app_core::router()
         .route("/init", get(init))
         .route("/sign-up", post(sign_up))
@@ -32,6 +37,7 @@ async fn main() {
         .route("/sign-out", post(sign_out))
         .with_state(AppState {
             pool: CustomPool::Sqlite(pool),
+            http_client: client,
         });
 
     tauri::Builder::default()
