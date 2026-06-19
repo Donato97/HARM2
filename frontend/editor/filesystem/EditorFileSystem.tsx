@@ -1,7 +1,9 @@
-import { createSignal, Show } from "solid-js";
-import { EditorFile, EditorFolder, useEditorFileSystem } from "./filesystem";
+import { Show } from "solid-js";
+import { EditorFile, EditorFolder, EFS } from "./filesystem";
+import FolderMenu from "./FolderMenu";
 
 type FolderProps = {
+  key: string;
   path: string;
   folder: EditorFolder;
 };
@@ -12,13 +14,11 @@ type FileProps = {
 };
 
 export default function EditorFileSystem() {
-  const EFS = useEditorFileSystem();
-
   return (
     <div class="drawer-side transition-none bg-neutral/20 w-65 h-full overflow-y-auto shrink-0 grow-0 border-r border-stone-800">
       <ul class="menu menu-sm transition-none w-full">
         <li>
-          <Folder folder={EFS.fileSystem.root} path="/root" />
+          <Folder folder={EFS.fileSystem.root} path="root" key="root" />
         </li>
       </ul>
     </div>
@@ -28,14 +28,9 @@ export default function EditorFileSystem() {
 function Folder(props: FolderProps) {
   console.log(props.path);
 
-  function toggleOpen() {
-    props.folder.open = !props.folder.open;
-  }
-
-  //! TODO: remove the "new folder" property if the folder name is empty
   function onBlur() {
     if (props.folder.name.trim() === "") {
-      delete props.folder["new folder"];
+      EFS.removeFolder(props.path)
       return;
     }
     props.folder.editMode = false;
@@ -44,7 +39,7 @@ function Folder(props: FolderProps) {
   return (
     <>
       <Show when={!props.folder.editMode}>
-        <button class="peer" onClick={toggleOpen}>
+        <button class="peer" onClick={() => EFS.toggleOpen(props.path)}>
           <span
             class="size-4"
             classList={{
@@ -80,9 +75,9 @@ function Folder(props: FolderProps) {
 
       <Show when={props.folder.open}>
         <ul>
-          {Object.values(props.folder.folders).map((folder) => (
+          {Object.entries(props.folder.folders).map(([key, folder]) => (
             <li>
-              <Folder folder={folder} path={`${props.path}/${folder.name}`} />
+              <Folder folder={folder} path={`${props.path}/${key}`} key={key} />
             </li>
           ))}
           {Object.values(props.folder.files).map((file) => (
@@ -106,85 +101,4 @@ function File(props: FileProps) {
   );
 }
 
-function FolderMenu(props: { folder: EditorFolder; path: string }) {
-  const [open, setOpen] = createSignal(false);
 
-  function toggleOpen() {
-    setOpen((prev) => !prev);
-  }
-
-  function onToggle(e: ToggleEvent) {
-    setOpen(e.newState === "open");
-  }
-
-  function newFolder() {
-    const duplicate = props.folder.folders["new folder"];
-
-    if (duplicate) {
-      return;
-    }
-
-    props.folder.folders["new folder"] = {
-      name: "",
-      open: false,
-      editMode: true,
-      files: {},
-      folders: {},
-    };
-
-    const el = document.getElementById("rename-folder");
-    if (el) {
-      el.focus();
-      toggleOpen();
-    }
-  }
-
-  function newFile() {
-    const duplicate = props.folder.files["new folder"];
-
-    if (duplicate) {
-      return;
-    }
-
-    props.folder.files["new folder"] = {
-      name: "New file",
-      content: "",
-    };
-  }
-
-  return (
-    <div class="opacity-0 peer-hover:opacity-100 hover:opacity-100 absolute right-0 top-0 p-0">
-      <button
-        class="btn btn-xs btn-ghost"
-        onclick={toggleOpen}
-        popoverTarget={props.path}
-        style={{ "anchor-name": `--${props.path}` }}
-      >
-        <span class="icon-[material-symbols--more-vert] size-4" />
-      </button>
-
-      <Show when={open()}>
-        <ul
-          class="dropdown m-0 menu rounded-box bg-base-300 shadow-sm"
-          popover="auto"
-          ontoggle={onToggle}
-          id={props.path}
-          style={{ "position-anchor": `--${props.path}` }}
-        >
-          <li>
-            <button onClick={newFolder}>
-              <span class="icon-[material-symbols--create-new-folder-outline] size-4" />
-              New folder
-            </button>
-          </li>
-          <li>
-            <button onClick={newFile}>
-              <span class="icon-[material-symbols--add-notes] size-4" />
-              New file
-            </button>
-          </li>
-        </ul>
-      </Show>
-    </div>
-  );
-}
