@@ -46,7 +46,11 @@ pub fn default(props: Props) -> Markup {
                         }
                     }
 
-                    nav id="mobile-nav" class="md:hidden dock dock-sm bg-base-200 justify-center border-t border-stone-800" {
+                    div id="content" class="h-full flex-1 min-h-0" {
+                        (props.slot)
+                    }
+
+                    nav id="mobile-nav" class="md:hidden dock dock-sm static bg-base-200 justify-center border-t border-stone-800" {
                         a."basis-1/2"."dock-active text-primary"[props.path == ""] href="/" {
                             span class="icon-[material-symbols--note-stack-outline] my-1.5 inline-block size-5" {}
                         }
@@ -56,10 +60,6 @@ pub fn default(props: Props) -> Markup {
                         a."basis-1/2"."dock-active text-primary"[props.path == "/movies"] href="/movies" {
                             span class="icon-[material-symbols--movie-outline] my-1.5 inline-block size-5" {}
                         }
-                    }
-
-                    div id="content" class="flex-1" {
-                        (props.slot)
                     }
                 }
             }

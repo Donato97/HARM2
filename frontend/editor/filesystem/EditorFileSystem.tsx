@@ -15,10 +15,10 @@ export default function EditorFileSystem() {
   const EFS = useEditorFileSystem();
 
   return (
-    <div class="bg-neutral/20 w-65 h-full overflow-y-auto shrink-0 grow-0 border-r border-stone-800">
-      <ul class="menu menu-sm w-full">
+    <div class="drawer-side transition-none bg-neutral/20 w-65 h-full overflow-y-auto shrink-0 grow-0 border-r border-stone-800">
+      <ul class="menu menu-sm transition-none w-full">
         <li>
-          <Folder folder={EFS.fileSystem.root} path="" />
+          <Folder folder={EFS.fileSystem.root} path="/root" />
         </li>
       </ul>
     </div>
@@ -32,31 +32,62 @@ function Folder(props: FolderProps) {
     props.folder.open = !props.folder.open;
   }
 
+  //! TODO: remove the "new folder" property if the folder name is empty
+  function onBlur() {
+    if (props.folder.name.trim() === "") {
+      delete props.folder["new folder"];
+      return;
+    }
+    props.folder.editMode = false;
+  }
+
   return (
     <>
-      <button onClick={toggleOpen}>
-        <span
-          class="size-4"
-          classList={{
-            "icon-[material-symbols--folder-outline]": !props.folder.open,
-            "icon-[material-symbols--folder-open]": props.folder.open,
-          }}
-        />
-        {props.folder.name}
-      </button>
+      <Show when={!props.folder.editMode}>
+        <button class="peer" onClick={toggleOpen}>
+          <span
+            class="size-4"
+            classList={{
+              "icon-[material-symbols--folder-outline]": !props.folder.open,
+              "icon-[material-symbols--folder-open]": props.folder.open,
+            }}
+          />
+          {props.folder.name}
+        </button>
 
-      <FolderMenu path={props.path} />
+        <FolderMenu folder={props.folder} path={props.path} />
+      </Show>
+
+      <Show when={props.folder.editMode}>
+        <div class="flex items-center">
+          <span
+            class="size-4"
+            classList={{
+              "icon-[material-symbols--folder-outline]": !props.folder.open,
+              "icon-[material-symbols--folder-open]": props.folder.open,
+            }}
+          />
+          <input
+            id="rename-folder"
+            type="text"
+            value={props.folder.name}
+            oninput={(e) => (props.folder.name = e.target.value)}
+            onblur={onBlur}
+            class="border cursor-pointer"
+          />
+        </div>
+      </Show>
 
       <Show when={props.folder.open}>
         <ul>
-          {Object.values(props.folder.files).map((file) => (
-            <li>
-              <File file={file} path={`${props.path}/${file.name}`} />
-            </li>
-          ))}
           {Object.values(props.folder.folders).map((folder) => (
             <li>
               <Folder folder={folder} path={`${props.path}/${folder.name}`} />
+            </li>
+          ))}
+          {Object.values(props.folder.files).map((file) => (
+            <li>
+              <File file={file} path={`${props.path}/${file.name}`} />
             </li>
           ))}
         </ul>
@@ -75,7 +106,7 @@ function File(props: FileProps) {
   );
 }
 
-function FolderMenu(props: { path: string }) {
+function FolderMenu(props: { folder: EditorFolder; path: string }) {
   const [open, setOpen] = createSignal(false);
 
   function toggleOpen() {
@@ -86,8 +117,43 @@ function FolderMenu(props: { path: string }) {
     setOpen(e.newState === "open");
   }
 
+  function newFolder() {
+    const duplicate = props.folder.folders["new folder"];
+
+    if (duplicate) {
+      return;
+    }
+
+    props.folder.folders["new folder"] = {
+      name: "",
+      open: false,
+      editMode: true,
+      files: {},
+      folders: {},
+    };
+
+    const el = document.getElementById("rename-folder");
+    if (el) {
+      el.focus();
+      toggleOpen();
+    }
+  }
+
+  function newFile() {
+    const duplicate = props.folder.files["new folder"];
+
+    if (duplicate) {
+      return;
+    }
+
+    props.folder.files["new folder"] = {
+      name: "New file",
+      content: "",
+    };
+  }
+
   return (
-    <div class="absolute right-0 top-0 p-0">
+    <div class="opacity-0 peer-hover:opacity-100 hover:opacity-100 absolute right-0 top-0 p-0">
       <button
         class="btn btn-xs btn-ghost"
         onclick={toggleOpen}
@@ -106,10 +172,16 @@ function FolderMenu(props: { path: string }) {
           style={{ "position-anchor": `--${props.path}` }}
         >
           <li>
-            <a>Item 1</a>
+            <button onClick={newFolder}>
+              <span class="icon-[material-symbols--create-new-folder-outline] size-4" />
+              New folder
+            </button>
           </li>
           <li>
-            <a>Item 2</a>
+            <button onClick={newFile}>
+              <span class="icon-[material-symbols--add-notes] size-4" />
+              New file
+            </button>
           </li>
         </ul>
       </Show>

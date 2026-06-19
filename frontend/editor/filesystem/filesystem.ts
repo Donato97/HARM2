@@ -8,6 +8,7 @@ export type EditorFile = {
 export type EditorFolder = {
   name: string;
   open: boolean;
+  editMode: boolean;
   files: Record<string, EditorFile>;
   folders: Record<string, EditorFolder>;
 };
@@ -21,6 +22,7 @@ export function useEditorFileSystem() {
     root: {
       name: "root",
       open: false,
+      editMode: false,
       files: {
         pippo: { name: "pippo", content: "" },
       },
@@ -28,6 +30,7 @@ export function useEditorFileSystem() {
         test: {
           name: "test",
           open: false,
+          editMode: false,
           files: {
             pippo: { name: "pippo", content: "" },
           },
@@ -35,6 +38,7 @@ export function useEditorFileSystem() {
             subfolder: {
               name: "subfolder",
               open: false,
+              editMode: false,
               files: { pippo: { name: "pippo", content: "" } },
               folders: {},
             },

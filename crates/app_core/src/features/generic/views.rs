@@ -4,7 +4,7 @@ use crate::layouts;
 
 pub async fn index() -> Markup {
     let markup = html! {
-        div id="root" {}
+        div class="h-full" id="root" {}
     };
 
     let layout_props = layouts::default::Props {

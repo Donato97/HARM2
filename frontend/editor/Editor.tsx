@@ -50,15 +50,17 @@ export default function Editor() {
   });
 
   return (
-    <main class="h-screen mx-auto overflow-y-auto flex">
+    <main class="drawer md:drawer-open h-full flex">
+      <input id="my-drawer-3" type="checkbox" class="drawer-toggle" />
+
       <EditorFileSystem />
 
-      <div class="max-w-prose mx-auto py-20">
+      <div class="drawer-content h-full w-[98%] sm:w-[80%] md:w-1/2 mx-auto flex flex-col min-h-0 py-20 overflow-y-auto">
         <Title onEnter={() => editor.focus()} />
 
         <div
           id="editor"
-          class="h-full w-full rounded-2xl p-4 mt-4"
+          class="flex-1 min-h-0 w-full rounded-2xl p-4 mt-4"
           contentEditable
           ref={editorRef}
         ></div>
