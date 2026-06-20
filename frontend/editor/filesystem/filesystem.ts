@@ -1,101 +1,158 @@
-import { createMutable, createStore } from "solid-js/store";
+import { createMutable, DeepReadonly } from "solid-js/store";
 
 export type EditorFile = {
-  name: string;
-  content: string;
+	id: string;
+	name: string;
+	editMode: boolean;
+	content: string;
 };
 
 export type EditorFolder = {
-  id: string;
-  name: string;
-  open: boolean;
-  editMode: boolean;
-  files: Record<string, EditorFile>;
-  folders: Record<string, EditorFolder>;
+	id: string;
+	name: string;
+	open: boolean;
+	editMode: boolean;
+	files: Record<string, EditorFile>;
+	folders: Record<string, EditorFolder>;
 };
 
 export type EditorFileSystem = Record<string, EditorFolder>;
 
 function useEditorFileSystem() {
-  const fileSystem = createMutable<EditorFileSystem>({
-    root: {
-      id: crypto.randomUUID(),
-      name: "root",
-      open: false,
-      editMode: false,
-      files: {
-        pippo: { name: "pippo", content: "" },
-      },
-      folders: {
-        test: {
-          id: crypto.randomUUID(),
-          name: "test",
-          open: false,
-          editMode: false,
-          files: {
-            pippo: { name: "pippo", content: "" },
-          },
-          folders: {
-            subfolder: {
-              id: crypto.randomUUID(),
-              name: "subfolder",
-              open: false,
-              editMode: false,
-              files: { pippo: { name: "pippo", content: "" } },
-              folders: {},
-            },
-          },
-        },
-      },
-    },
-  });
+	const fileSystem = createMutable<EditorFileSystem>({
+		root: {
+			id: crypto.randomUUID(),
+			name: "root",
+			open: false,
+			editMode: false,
+			files: {
+				pippo: { id: crypto.randomUUID(), name: "pippo", editMode: false, content: "" },
+			},
+			folders: {
+				test: {
+					id: crypto.randomUUID(),
+					name: "test",
+					open: false,
+					editMode: false,
+					files: {
+						pippo: { id: crypto.randomUUID(), name: "pippo", editMode: false, content: "" },
+					},
+					folders: {
+						subfolder: {
+							id: crypto.randomUUID(),
+							name: "subfolder",
+							open: false,
+							editMode: false,
+							files: { pippo: { id: crypto.randomUUID(), name: "pippo", editMode: false, content: "" } },
+							folders: {},
+						},
+					},
+				},
+			},
+		},
+	});
 
-  function toggleOpen(path: string) {
-    const node = _getFolderNode(path);
-    if (!node) return;
-    node.open = !node.open;
-  }
+	function toggleFolderEditMode(path: string) {
+		const node = _getFolderNode(path);
+		if (!node) return;
+		node.editMode = !node.editMode;
+	}
 
-  function addFolder(path: string) {
-    const node = _getFolderNode(path);
-    if (!node) return;
+	function toggleFileEditMode(path: string) {
+		const node = _getFileNode(path);
+		if (!node) return;
+		node.editMode = !node.editMode;
+	}
 
-    const key = crypto.randomUUID();
+	function toggleOpen(path: string) {
+		const node = _getFolderNode(path);
+		if (!node) return;
+		node.open = !node.open;
+	}
 
-    node.open = true;
-    node.folders[key] = {
-      id: key,
-      name: "",
-      open: false,
-      editMode: true,
-      files: {},
-      folders: {},
-    };
-  }
+	function addFolder(path: string) {
+		const depth = path.split("/").length;
+		if (depth >= 5) return;
 
-  function removeFolder(path: string) {
-    const parts = path.split("/");
-    const key = parts.at(-1);
-    if (!key) return;
+		const node = _getFolderNode(path);
+		if (!node) return;
 
-    const parentPath = parts.slice(0, -1).join("/")
-    const node = _getFolderNode(parentPath);
-    if (!node) return;
+		const key = crypto.randomUUID();
 
-    delete node.folders[key];
-  }
+		node.open = true;
+		node.folders[key] = {
+			id: key,
+			name: "",
+			open: false,
+			editMode: true,
+			files: {},
+			folders: {},
+		};
+	}
 
-  function _getFolderNode(path: string): EditorFolder | undefined {
-    const pathParts = path.split("/").slice(1);
+	function addFile(path: string) {
+		const node = _getFolderNode(path);
+		if (!node) return;
 
-    let node: EditorFolder | undefined = fileSystem.root;
-    for (const part of pathParts) {
-      node = node?.folders[part];
-    }
-    return node;
-  }
+		const key = crypto.randomUUID();
 
-  return { fileSystem, addFolder, removeFolder, toggleOpen };
+		node.open = true;
+		node.files[key] = {
+			id: key,
+			name: "",
+			editMode: true,
+			content: "",
+		};
+	}
+
+	function removeFolder(path: string) {
+		const parts = path.split("/");
+		const key = parts.at(-1);
+		if (!key) return;
+
+		const parentPath = parts.slice(0, -1).join("/")
+		const node = _getFolderNode(parentPath);
+		if (!node) return;
+
+		delete node.folders[key];
+	}
+
+	function removeFile(path: string) {
+		const parts = path.split("/");
+		const key = parts.at(-1);
+		if (!key) return;
+
+		const parentPath = parts.slice(0, -1).join("/")
+		const node = _getFolderNode(parentPath);
+		if (!node) return;
+
+		delete node.files[key];
+	}
+
+	function _getFileNode(path: string): EditorFile | undefined {
+		const pathParts = path.split("/").slice(1).slice(0, -1);
+		const key = path.split("/").at(-1);
+
+		if (!key) return undefined;
+
+		let node: EditorFolder | undefined = fileSystem.root;
+		for (const part of pathParts) {
+			node = node?.folders[part];
+		}
+		return node.files[key];
+	}
+
+	function _getFolderNode(path: string): EditorFolder | undefined {
+		const pathParts = path.split("/").slice(1);
+
+		let node: EditorFolder | undefined = fileSystem.root;
+		for (const part of pathParts) {
+			node = node?.folders[part];
+		}
+		return node;
+	}
+
+	return { fileSystem, addFolder, addFile, removeFolder, removeFile, toggleOpen, toggleFolderEditMode, toggleFileEditMode };
 }
 
 export const EFS = useEditorFileSystem();

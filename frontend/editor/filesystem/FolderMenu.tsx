@@ -2,6 +2,7 @@ import { createSignal, Show } from "solid-js";
 import { EditorFolder, EFS } from "./filesystem";
 
 export default function FolderMenu(props: { folder: EditorFolder; path: string }) {
+    const depth = props.path.split("/").length;
     const [open, setOpen] = createSignal(false);
 
     function toggleOpen() {
@@ -23,16 +24,13 @@ export default function FolderMenu(props: { folder: EditorFolder; path: string }
     }
 
     function newFile() {
-        const duplicate = props.folder.files["new folder"];
+        EFS.addFile(props.path);
 
-        if (duplicate) {
-            return;
+        const el = document.getElementById("rename-file");
+        if (el) {
+            el.focus();
+            toggleOpen();
         }
-
-        props.folder.files["new folder"] = {
-            name: "New file",
-            content: "",
-        };
     }
 
     return (
@@ -48,18 +46,20 @@ export default function FolderMenu(props: { folder: EditorFolder; path: string }
 
             <Show when={open()}>
                 <ul
-                    class="dropdown m-0 menu rounded-box bg-base-300 shadow-sm"
+                    class="dropdown m-0 menu border border-base-content/20 rounded-box bg-base-100 shadow-sm"
                     popover="auto"
                     ontoggle={onToggle}
                     id={props.folder.id}
                     style={{ "position-anchor": `--${props.folder.id}` }}
                 >
-                    <li>
-                        <button onClick={newFolder}>
-                            <span class="icon-[material-symbols--create-new-folder-outline] size-4" />
-                            New folder
-                        </button>
-                    </li>
+                    <Show when={depth < 5}>
+                        <li>
+                            <button onClick={newFolder}>
+                                <span class="icon-[material-symbols--create-new-folder-outline] size-4" />
+                                New folder
+                            </button>
+                        </li>
+                    </Show>
                     <li>
                         <button onClick={newFile}>
                             <span class="icon-[material-symbols--add-notes] size-4" />
