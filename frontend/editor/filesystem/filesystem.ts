@@ -1,4 +1,5 @@
 import { createMutable } from "solid-js/store";
+import { EFSClient } from "./client";
 
 export type EditorFile = {
 	id: string;
@@ -19,38 +20,12 @@ export type EditorFolder = {
 export type EditorFileSystem = Record<string, EditorFolder>;
 
 function useEditorFileSystem() {
-	const fileSystem = createMutable<EditorFileSystem>({
-		root: {
-			id: crypto.randomUUID(),
-			name: "root",
-			open: false,
-			editMode: false,
-			files: {
-				pippo: { id: crypto.randomUUID(), name: "pippo", editMode: false, content: "" },
-			},
-			folders: {
-				test: {
-					id: crypto.randomUUID(),
-					name: "test",
-					open: false,
-					editMode: false,
-					files: {
-						pippo: { id: crypto.randomUUID(), name: "pippo", editMode: false, content: "" },
-					},
-					folders: {
-						subfolder: {
-							id: crypto.randomUUID(),
-							name: "subfolder",
-							open: false,
-							editMode: false,
-							files: { pippo: { id: crypto.randomUUID(), name: "pippo", editMode: false, content: "" } },
-							folders: {},
-						},
-					},
-				},
-			},
-		},
-	});
+	const fileSystem = createMutable<EditorFileSystem>({});
+	_init();
+
+	function _init() {
+		EFSClient.fetchFileSystem().then((data) => Object.assign(fileSystem, data));
+	}
 
 	function openAllFolders(folder: Record<string, EditorFolder>) {
 		for (const childFolder of Object.values(folder)) {
@@ -70,12 +45,30 @@ function useEditorFileSystem() {
 		const node = _getFolderNode(path);
 		if (!node) return;
 		node.editMode = !node.editMode;
+
+		if (!node.editMode) {
+			EFSClient.create({
+				id: node.id,
+				parent_id: path.split("/").slice(0, -1).at(-1),
+				name: node.name,
+				type_: "folder",
+			});
+		}
 	}
 
 	function toggleFileEditMode(path: string) {
 		const node = _getFileNode(path);
 		if (!node) return;
 		node.editMode = !node.editMode;
+
+		if (!node.editMode) {
+			EFSClient.create({
+				id: node.id,
+				parent_id: path.split("/").slice(0, -1).at(-1),
+				name: node.name,
+				type_: "file",
+			});
+		}
 	}
 
 	function toggleOpen(path: string) {
@@ -165,16 +158,14 @@ function useEditorFileSystem() {
 	}
 
 	function _getFileNode(path: string): EditorFile | undefined {
-		const pathParts = path.split("/").slice(1).slice(0, -1);
+		const pathParts = path.split("/");
 		const key = path.split("/").at(-1);
 
 		if (!key) return undefined;
 
-		let node: EditorFolder | undefined = fileSystem.root;
-		for (const part of pathParts) {
-			node = node?.folders[part];
-		}
-		return node.files[key];
+		const parentPath = pathParts.slice(0, -1).join("/")
+		const parentFolder = _getFolderNode(parentPath)
+		return parentFolder?.files[key]
 	}
 
 	function _getFolderNode(path: string): EditorFolder | undefined {

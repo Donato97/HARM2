@@ -7,7 +7,7 @@ pub struct User {
     pub password: String,
 }
 
-#[derive(Debug, FromRow, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, FromRow, serde::Serialize, serde::Deserialize)]
 pub struct SessionUser {
     pub id: u64,
     pub email: String,

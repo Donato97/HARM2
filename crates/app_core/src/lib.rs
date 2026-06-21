@@ -17,6 +17,10 @@ pub mod features {
         pub mod handlers;
         pub mod views;
     }
+    pub mod file_system {
+        pub mod handlers;
+        pub mod models;
+    }
 }
 pub mod layouts {
     pub mod auth;
@@ -26,11 +30,14 @@ pub mod layouts {
     pub use default::default;
 }
 
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 
 pub use state::{AppState, CustomPool};
 
-use crate::features::{auth, games, generic::views::index, movies};
+use crate::features::{auth, file_system, games, generic::views::index, movies};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -39,4 +46,6 @@ pub fn router() -> Router<AppState> {
         .route("/movies", get(movies::handlers::index))
         .route("/sign-up", get(auth::handlers::sign_up))
         .route("/sign-in", get(auth::handlers::sign_in))
+        .route("/api/filesystem", get(file_system::handlers::index))
+        .route("/api/filesystem", post(file_system::handlers::create))
 }

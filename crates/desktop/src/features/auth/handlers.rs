@@ -1,4 +1,5 @@
 use app_core::{
+    features::auth::models::SessionUser,
     helper::markup_errors::{bad_request, server_error, AppResponse},
     AppState,
 };
@@ -88,4 +89,14 @@ pub async fn sign_out(State(state): State<AppState>) -> AppResponse {
     keychain.delete_credential().map_err(server_error)?;
 
     Ok(Redirect::to("/").into_response())
+}
+
+pub async fn middleware(mut req: Request, next: Next) -> AppResponse {
+    let session_user = SessionUser {
+        id: 1,
+        email: "".to_string(),
+    };
+
+    req.extensions_mut().insert(session_user);
+    Ok(next.run(req).await.into_response())
 }

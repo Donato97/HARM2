@@ -1,6 +1,9 @@
 use app_core::{
     features::auth::models::{SessionUser, User},
-    helper::markup_errors::{bad_request, server_error, AppResponse},
+    helper::{
+        markup_errors::{bad_request, server_error},
+        AppResponse,
+    },
 };
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
@@ -115,7 +118,7 @@ pub async fn sign_out(session: Session) -> AppResponse {
     Ok(Redirect::to("/sign-in").into_response())
 }
 
-pub async fn middleware(session: Session, req: Request, next: Next) -> AppResponse {
+pub async fn middleware(session: Session, mut req: Request, next: Next) -> AppResponse {
     let session_user = session
         .get::<SessionUser>("user")
         .await
@@ -123,17 +126,21 @@ pub async fn middleware(session: Session, req: Request, next: Next) -> AppRespon
 
     let path = req.uri().path();
 
-    if session_user.is_some() {
-        if path != "/sign-in" && path != "/sign-up" {
-            Ok(next.run(req).await.into_response())
-        } else {
-            Ok(Redirect::to("/").into_response())
+    match session_user {
+        Some(session_user) => {
+            if path != "/sign-in" && path != "/sign-up" {
+                req.extensions_mut().insert(session_user);
+                Ok(next.run(req).await.into_response())
+            } else {
+                Ok(Redirect::to("/").into_response())
+            }
         }
-    } else {
-        if path == "/sign-in" || path == "/sign-up" {
-            Ok(next.run(req).await.into_response())
-        } else {
-            Ok(Redirect::to("/sign-in").into_response())
+        None => {
+            if path == "/sign-in" || path == "/sign-up" {
+                Ok(next.run(req).await.into_response())
+            } else {
+                Ok(Redirect::to("/sign-in").into_response())
+            }
         }
     }
 }

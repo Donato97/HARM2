@@ -11,6 +11,7 @@ mod features {
     }
 }
 
+use axum::middleware;
 use axum::routing::{get, post};
 use features::auth::handlers::{sign_in, sign_out, sign_up};
 use features::general::handlers::init;
@@ -35,6 +36,7 @@ async fn main() {
         .route("/sign-up", post(sign_up))
         .route("/sign-in", post(sign_in))
         .route("/sign-out", post(sign_out))
+        .layer(middleware::from_fn(auth::handlers::middleware))
         .with_state(AppState {
             pool: CustomPool::Sqlite(pool),
             http_client: client,
