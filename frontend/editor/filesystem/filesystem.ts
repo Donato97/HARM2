@@ -1,4 +1,4 @@
-import { createMutable, DeepReadonly } from "solid-js/store";
+import { createMutable } from "solid-js/store";
 
 export type EditorFile = {
 	id: string;
@@ -52,6 +52,20 @@ function useEditorFileSystem() {
 		},
 	});
 
+	function openAllFolders(folder: Record<string, EditorFolder>) {
+		for (const childFolder of Object.values(folder)) {
+			childFolder.open = true;
+			openAllFolders(childFolder.folders);
+		}
+	}
+
+	function closeAllFolders(folder: Record<string, EditorFolder>) {
+		for (const childFolder of Object.values(folder)) {
+			childFolder.open = false;
+			closeAllFolders(childFolder.folders);
+		}
+	}
+
 	function toggleFolderEditMode(path: string) {
 		const node = _getFolderNode(path);
 		if (!node) return;
@@ -90,6 +104,21 @@ function useEditorFileSystem() {
 		};
 	}
 
+	function addRootFolder() {
+		const key = crypto.randomUUID();
+
+		fileSystem[key] = {
+			id: key,
+			name: "",
+			open: false,
+			editMode: true,
+			files: {},
+			folders: {},
+		};
+
+		document.getElementById("rename-folder")?.focus();
+	}
+
 	function addFile(path: string) {
 		const node = _getFolderNode(path);
 		if (!node) return;
@@ -110,7 +139,13 @@ function useEditorFileSystem() {
 		const key = parts.at(-1);
 		if (!key) return;
 
-		const parentPath = parts.slice(0, -1).join("/")
+		const parentPath = parts.slice(0, -1).join("/");
+
+		if (parentPath === "") {
+			delete fileSystem[key];
+			return;
+		}
+
 		const node = _getFolderNode(parentPath);
 		if (!node) return;
 
@@ -143,16 +178,28 @@ function useEditorFileSystem() {
 	}
 
 	function _getFolderNode(path: string): EditorFolder | undefined {
-		const pathParts = path.split("/").slice(1);
+		const pathParts = path.split("/");
 
-		let node: EditorFolder | undefined = fileSystem.root;
-		for (const part of pathParts) {
+		let node: EditorFolder | undefined = fileSystem[pathParts[0]];
+		for (const part of pathParts.slice(1)) {
 			node = node?.folders[part];
 		}
 		return node;
 	}
 
-	return { fileSystem, addFolder, addFile, removeFolder, removeFile, toggleOpen, toggleFolderEditMode, toggleFileEditMode };
+	return {
+		fileSystem,
+		addFolder,
+		addRootFolder,
+		addFile,
+		removeFolder,
+		removeFile,
+		toggleOpen,
+		toggleFolderEditMode,
+		toggleFileEditMode,
+		openAllFolders,
+		closeAllFolders
+	};
 }
 
 export const EFS = useEditorFileSystem();

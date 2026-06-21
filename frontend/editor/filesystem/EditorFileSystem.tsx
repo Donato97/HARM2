@@ -3,7 +3,6 @@ import { EditorFile, EditorFolder, EFS } from "./filesystem";
 import FolderMenu from "./FolderMenu";
 
 type FolderProps = {
-    key: string;
     path: string;
     folder: EditorFolder;
 };
@@ -15,11 +14,27 @@ type FileProps = {
 
 export default function EditorFileSystem() {
     return (
-        <div class="drawer-side transition-none bg-neutral/20 w-65 h-full overflow-y-auto shrink-0 grow-0 border-r border-stone-800">
+        <div class="drawer-side transition-none bg-neutral/20 w-65 h-full overflow-y-auto shrink-0 grow-0 border-r border-base-content/20">
+            <div class="flex items-center justify-end p-2 border-b border-base-content/20 w-full">
+                <button class="btn btn-xs btn-ghost" onclick={() => EFS.addRootFolder()}>
+                    <span class="icon-[material-symbols--create-new-folder-outline] size-4" />
+                </button>
+                <button class="btn btn-xs btn-ghost" onclick={() => EFS.openAllFolders(EFS.fileSystem)}>
+                    <span class="icon-[material-symbols--expand] size-4" />
+                </button>
+                <button class="btn btn-xs btn-ghost" onclick={() => EFS.closeAllFolders(EFS.fileSystem)}>
+                    <span class="icon-[material-symbols--compress] size-4" />
+                </button>
+            </div>
+
             <ul class="menu menu-sm transition-none w-full">
-                <li>
-                    <Folder folder={EFS.fileSystem.root} path="root" key="root" />
-                </li>
+                <For each={Object.entries(EFS.fileSystem)}>
+                    {([key, folder]) => (
+                        <li>
+                            <Folder folder={folder} path={key} />
+                        </li>
+                    )}
+                </For>
             </ul>
         </div>
     );
@@ -86,7 +101,7 @@ function Folder(props: FolderProps) {
                     <For each={Object.entries(props.folder.folders)}>
                         {([key, folder]) => (
                             <li>
-                                <Folder folder={folder} path={`${props.path}/${key}`} key={key} />
+                                <Folder folder={folder} path={`${props.path}/${key}`} />
                             </li>
                         )}
                     </For>
