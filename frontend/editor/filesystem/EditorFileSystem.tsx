@@ -3,6 +3,7 @@ import { EditorFile, EditorFolder, EFS } from ".";
 import FolderMenu from "./FolderMenu";
 import { EFSClient } from "./client";
 import { editor } from "../index";
+import { $createParagraphNode, $getRoot } from "lexical";
 
 type FolderProps = {
     path: string;
@@ -170,8 +171,17 @@ function File(props: FileProps) {
                         const content = await EFSClient.fetchFile(
                             props.file.id,
                         );
-                        const state = editor.parseEditorState(content);
-                        editor.setEditorState(state);
+
+                        if (content) {
+                            const state = editor.parseEditorState(content);
+                            editor.setEditorState(state);
+                        } else {
+                            editor.update(() => {
+                                const root = $getRoot();
+                                root.clear();
+                                root.append($createParagraphNode());
+                            });
+                        }
                     }}
                     class="peer"
                 >
