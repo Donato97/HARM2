@@ -11,11 +11,12 @@ mod features {
     }
 }
 
+use crate::features::auth;
 use axum::middleware;
 use axum::routing::{get, post};
-use features::auth::handlers::{sign_in, sign_out, sign_up};
 use features::general::handlers::init;
 use keyring_core::set_default_store;
+use tower_http::services::ServeDir;
 use windows_native_keyring_store::Store;
 
 #[tokio::main]
@@ -33,9 +34,10 @@ async fn main() {
 
     let router = app_core::router()
         .route("/init", get(init))
-        .route("/sign-up", post(sign_up))
-        .route("/sign-in", post(sign_in))
-        .route("/sign-out", post(sign_out))
+        .route("/sign-up", post(auth::handlers::sign_up))
+        .route("/sign-in", post(auth::handlers::sign_in))
+        .route("/sign-out", post(auth::handlers::sign_out))
+        .nest_service("/assets", ServeDir::new("dist/assets"))
         .layer(middleware::from_fn(auth::handlers::middleware))
         .with_state(AppState {
             pool: CustomPool::Sqlite(pool),

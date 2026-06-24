@@ -1,6 +1,8 @@
 import { For, Show } from "solid-js";
-import { EditorFile, EditorFolder, EFS } from "./filesystem";
+import { EditorFile, EditorFolder, EFS } from ".";
 import FolderMenu from "./FolderMenu";
+import { EFSClient } from "./client";
+import { editor } from "../index";
 
 type FolderProps = {
     path: string;
@@ -14,28 +16,45 @@ type FileProps = {
 
 export default function EditorFileSystem() {
     return (
-        <div class="drawer-side transition-none bg-neutral/20 w-65 h-full overflow-y-auto shrink-0 grow-0 border-r border-base-content/20">
-            <div class="flex items-center justify-end p-2 border-b border-base-content/20 w-full">
-                <button class="btn btn-xs btn-ghost" onclick={() => EFS.addRootFolder()}>
-                    <span class="icon-[material-symbols--create-new-folder-outline] size-4" />
-                </button>
-                <button class="btn btn-xs btn-ghost" onclick={() => EFS.openAllFolders(EFS.fileSystem)}>
-                    <span class="icon-[material-symbols--expand] size-4" />
-                </button>
-                <button class="btn btn-xs btn-ghost" onclick={() => EFS.closeAllFolders(EFS.fileSystem)}>
-                    <span class="icon-[material-symbols--compress] size-4" />
-                </button>
-            </div>
+        <div class="drawer-side overflow-y-auto shrink-0 grow-0">
+            <label
+                for="file-system-drawer"
+                aria-label="close sidebar"
+                class="drawer-overlay w-full"
+            ></label>
 
-            <ul class="menu menu-sm transition-none w-full">
-                <For each={Object.entries(EFS.fileSystem)}>
-                    {([key, folder]) => (
-                        <li>
-                            <Folder folder={folder} path={key} />
-                        </li>
-                    )}
-                </For>
-            </ul>
+            <div class="w-65 bg-base-300 border-r border-base-content/20 h-full">
+                <div class="flex items-center justify-end p-2 border-b border-base-content/20">
+                    <button
+                        class="btn btn-xs btn-ghost"
+                        onclick={() => EFS.addRootFolder()}
+                    >
+                        <span class="icon-[material-symbols--create-new-folder-outline] size-4" />
+                    </button>
+                    <button
+                        class="btn btn-xs btn-ghost"
+                        onclick={() => EFS.openAllFolders(EFS.fileSystem)}
+                    >
+                        <span class="icon-[material-symbols--expand] size-4" />
+                    </button>
+                    <button
+                        class="btn btn-xs btn-ghost"
+                        onclick={() => EFS.closeAllFolders(EFS.fileSystem)}
+                    >
+                        <span class="icon-[material-symbols--compress] size-4" />
+                    </button>
+                </div>
+
+                <ul class="menu menu-sm w-full">
+                    <For each={Object.entries(EFS.fileSystem)}>
+                        {([key, folder]) => (
+                            <li>
+                                <Folder folder={folder} path={key} />
+                            </li>
+                        )}
+                    </For>
+                </ul>
+            </div>
         </div>
     );
 }
@@ -43,7 +62,7 @@ export default function EditorFileSystem() {
 function Folder(props: FolderProps) {
     function onblur() {
         if (props.folder.name.trim() === "") {
-            EFS.removeFolder(props.path)
+            EFS.removeFolder(props.path);
             return;
         }
         EFS.toggleFolderEditMode(props.path);
@@ -61,11 +80,12 @@ function Folder(props: FolderProps) {
             <span
                 class="size-4 shrink-0 grow-0"
                 classList={{
-                    "icon-[material-symbols--folder-outline]": !props.folder.open,
+                    "icon-[material-symbols--folder-outline]":
+                        !props.folder.open,
                     "icon-[material-symbols--folder-open]": props.folder.open,
                 }}
             />
-        )
+        );
     }
 
     return (
@@ -73,9 +93,7 @@ function Folder(props: FolderProps) {
             <Show when={!props.folder.editMode}>
                 <button class="peer" onClick={() => EFS.toggleOpen(props.path)}>
                     <Icon />
-                    <span class="truncate">
-                        {props.folder.name}
-                    </span>
+                    <span class="truncate">{props.folder.name}</span>
                 </button>
 
                 <FolderMenu folder={props.folder} path={props.path} />
@@ -101,14 +119,20 @@ function Folder(props: FolderProps) {
                     <For each={Object.entries(props.folder.folders)}>
                         {([key, folder]) => (
                             <li>
-                                <Folder folder={folder} path={`${props.path}/${key}`} />
+                                <Folder
+                                    folder={folder}
+                                    path={`${props.path}/${key}`}
+                                />
                             </li>
                         )}
                     </For>
                     <For each={Object.entries(props.folder.files)}>
                         {([key, file]) => (
                             <li>
-                                <File file={file} path={`${props.path}/${key}`} />
+                                <File
+                                    file={file}
+                                    path={`${props.path}/${key}`}
+                                />
                             </li>
                         )}
                     </For>
@@ -121,7 +145,7 @@ function Folder(props: FolderProps) {
 function File(props: FileProps) {
     function onblur() {
         if (props.file.name.trim() === "") {
-            EFS.removeFile(props.path)
+            EFS.removeFile(props.path);
             return;
         }
         EFS.toggleFileEditMode(props.path);
@@ -137,12 +161,23 @@ function File(props: FileProps) {
     return (
         <>
             <Show when={!props.file.editMode}>
-                <a class="peer">
+                <button
+                    onclick={async () => {
+                        EFS.setActiveNote({
+                            path: props.path,
+                            file: props.file,
+                        });
+                        const content = await EFSClient.fetchFile(
+                            props.file.id,
+                        );
+                        const state = editor.parseEditorState(content);
+                        editor.setEditorState(state);
+                    }}
+                    class="peer"
+                >
                     <span class="icon-[material-symbols--notes] size-4 shrink-0 grow-0" />
-                    <span class="truncate">
-                        {props.file.name}
-                    </span>
-                </a>
+                    <span class="truncate">{props.file.name}</span>
+                </button>
 
                 {/* <FolderMenu folder={props.folder} path={props.path} /> */}
             </Show>
@@ -164,5 +199,3 @@ function File(props: FileProps) {
         </>
     );
 }
-
-

@@ -62,4 +62,23 @@ impl AppState {
 
         Ok(id)
     }
+
+    pub async fn exe_update<S>(&self, stmt: S) -> Result<u64, sqlx::Error>
+    where
+        S: QueryStatementBuilder,
+    {
+        let (query, values) = self.build(stmt);
+        let id = match &self.pool {
+            CustomPool::Sqlite(pool) => sqlx::query_with(&query, values)
+                .execute(pool)
+                .await?
+                .last_insert_rowid() as u64,
+            CustomPool::Mysql(pool) => sqlx::query_with(&query, values)
+                .execute(pool)
+                .await?
+                .last_insert_id(),
+        };
+
+        Ok(id)
+    }
 }

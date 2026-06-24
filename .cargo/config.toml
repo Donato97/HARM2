@@ -1,5 +1,5 @@
 [alias]
 # Lancia la versione web (server Axum standalone su http://localhost:3000)
-web = ["watch", "-w", "crates/web", "-w", "crates/app_core", "-x", "run -p web"]
+web = ["watch", "-w", "crates/web", "-w", "crates/app_core", "-i", "db.sqlite*", "-x", "run -p web"]
 # Lancia la versione desktop (app Tauri v2)
 desktop = ["watch", "-w", "crates/desktop", "-w", "crates/app_core", "-x", "run -p desktop"]

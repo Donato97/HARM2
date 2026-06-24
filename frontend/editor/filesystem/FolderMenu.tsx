@@ -1,7 +1,10 @@
 import { createSignal, Show } from "solid-js";
-import { EditorFolder, EFS } from "./filesystem";
+import { EditorFolder, EFS } from ".";
 
-export default function FolderMenu(props: { folder: EditorFolder; path: string }) {
+export default function FolderMenu(props: {
+    folder: EditorFolder;
+    path: string;
+}) {
     const depth = props.path.split("/").length;
     const [open, setOpen] = createSignal(false);
 
@@ -14,7 +17,7 @@ export default function FolderMenu(props: { folder: EditorFolder; path: string }
     }
 
     function newFolder() {
-        EFS.addFolder(props.path)
+        EFS.addFolder(props.path);
 
         const el = document.getElementById("rename-folder");
         if (el) {
@@ -27,6 +30,16 @@ export default function FolderMenu(props: { folder: EditorFolder; path: string }
         EFS.addFile(props.path);
 
         const el = document.getElementById("rename-file");
+        if (el) {
+            el.focus();
+            toggleOpen();
+        }
+    }
+
+    function rename() {
+        EFS.toggleFolderEditMode(props.path);
+
+        const el = document.getElementById("rename-folder");
         if (el) {
             el.focus();
             toggleOpen();
@@ -64,6 +77,12 @@ export default function FolderMenu(props: { folder: EditorFolder; path: string }
                         <button onClick={newFile}>
                             <span class="icon-[material-symbols--add-notes] size-4" />
                             New file
+                        </button>
+                    </li>
+                    <li>
+                        <button onClick={rename}>
+                            <span class="icon-[material-symbols--edit] size-4" />
+                            Rename
                         </button>
                     </li>
                 </ul>

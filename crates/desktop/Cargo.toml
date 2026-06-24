@@ -13,6 +13,7 @@ tauri-plugin-axum = "0.10"
 keyring-core = "1.0.0"
 windows-native-keyring-store = "1.1.0"
 axum = { workspace = true }
+tower-http = { workspace = true }
 tokio = { workspace = true }
 sqlx = { workspace = true }
 reqwest = { workspace = true }

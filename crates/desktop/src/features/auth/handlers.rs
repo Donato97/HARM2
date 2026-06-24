@@ -1,11 +1,15 @@
 use app_core::{
     features::auth::models::SessionUser,
-    helper::markup_errors::{bad_request, server_error, AppResponse},
+    helper::{
+        markup_errors::{bad_request, server_error},
+        AppResponse,
+    },
     AppState,
 };
 use axum::{
     body::to_bytes,
     extract::{Request, State},
+    middleware::Next,
     response::{IntoResponse, Redirect},
 };
 use reqwest::Method;

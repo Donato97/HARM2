@@ -806,6 +806,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-axum",
  "tokio",
+ "tower-http",
  "windows-native-keyring-store",
 ]
 
