@@ -65,7 +65,7 @@ export default function Editor() {
 
             <div
                 id="editor"
-                class="flex-1 min-h-0 w-full rounded-2xl p-4 mt-4"
+                class="flex-1 min-h-0 w-full rounded-2xl p-4 mt-4 prose"
                 contentEditable
                 spellcheck="false"
                 ref={editorRef}

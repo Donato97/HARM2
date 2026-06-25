@@ -1,7 +1,6 @@
-use super::views;
 use crate::{
     features::auth::models::SessionUser,
-    helper::{api_errors::server_error, ApiResponse, AppResponse},
+    helper::{api_errors::server_error, ApiResponse},
     AppState,
 };
 use axum::{
@@ -20,10 +19,6 @@ pub struct Note {
 pub struct UpdateBody {
     pub id: String,
     pub content: String,
-}
-
-pub async fn index() -> AppResponse {
-    Ok(views::index().into_response())
 }
 
 pub async fn find(

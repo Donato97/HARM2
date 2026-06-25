@@ -77,7 +77,7 @@ pub async fn create_or_update(
             .map_err(server_error)?;
     }
 
-    Ok(().into_response())
+    Ok(Json(()).into_response())
 }
 
 pub async fn update(
@@ -94,5 +94,5 @@ pub async fn update(
 
     state.exe_update(query).await.map_err(server_error)?;
 
-    Ok(().into_response())
+    Ok(Json(()).into_response())
 }
