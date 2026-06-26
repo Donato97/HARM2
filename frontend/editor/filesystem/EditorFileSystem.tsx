@@ -1,7 +1,6 @@
 import { For, Show } from "solid-js";
 import { EditorFile, EditorFolder, EFS } from ".";
 import FolderMenu from "./FolderMenu";
-import { EFSClient } from "./client";
 import { editor } from "../index";
 import { $createParagraphNode, $getRoot } from "lexical";
 
@@ -28,7 +27,7 @@ export default function EditorFileSystem() {
                 <div class="flex items-center justify-end p-2 border-b border-base-content/20">
                     <button
                         class="btn btn-xs btn-ghost"
-                        onclick={() => EFS.addRootFolder()}
+                        onclick={() => EFS.folder.createRoot()}
                     >
                         <span class="icon-[material-symbols--create-new-folder-outline] size-4" />
                     </button>
@@ -63,10 +62,16 @@ export default function EditorFileSystem() {
 function Folder(props: FolderProps) {
     function onblur() {
         if (props.folder.name.trim() === "") {
-            EFS.removeFolder(props.path);
+            EFS.folder.remove(props.path);
             return;
         }
-        EFS.toggleFolderEditMode(props.path);
+        EFS.folder.toggleEditMode(props.path);
+        EFS.folder.client.createOrUpdate({
+            id: props.folder.id,
+            name: props.folder.name,
+            type_: "folder",
+            parent_id: props.path.split("/").at(-2),
+        });
     }
 
     function onkeydown(e: KeyboardEvent) {
@@ -92,7 +97,10 @@ function Folder(props: FolderProps) {
     return (
         <>
             <Show when={!props.folder.editMode}>
-                <button class="peer" onClick={() => EFS.toggleOpen(props.path)}>
+                <button
+                    class="peer"
+                    onClick={() => EFS.folder.toggleOpen(props.path)}
+                >
                     <Icon />
                     <span class="truncate">{props.folder.name}</span>
                 </button>
@@ -146,10 +154,16 @@ function Folder(props: FolderProps) {
 function File(props: FileProps) {
     function onblur() {
         if (props.file.name.trim() === "") {
-            EFS.removeFile(props.path);
+            EFS.note.remove(props.path);
             return;
         }
-        EFS.toggleFileEditMode(props.path);
+        EFS.note.toggleEditMode(props.path);
+        EFS.folder.client.createOrUpdate({
+            id: props.file.id,
+            name: props.file.name,
+            type_: "file",
+            parent_id: props.path.split("/").at(-2),
+        });
     }
 
     function onkeydown(e: KeyboardEvent) {
@@ -168,7 +182,7 @@ function File(props: FileProps) {
                             path: props.path,
                             file: props.file,
                         });
-                        const content = await EFSClient.fetchFile(
+                        const content = await EFS.note.client.find(
                             props.file.id,
                         );
 

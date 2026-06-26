@@ -1,6 +1,7 @@
 import { createMutable } from "solid-js/store";
-import { EFSClient } from "./client";
+import { NodesClient, NotesClient } from "./client";
 import { createSignal } from "solid-js";
+import { _getFileNode, _getFolderNode, _getRoot } from "../utils";
 
 export type EditorFile = {
     id: string;
@@ -20,19 +21,15 @@ export type EditorFolder = {
 
 export type EditorFileSystem = Record<string, EditorFolder>;
 
-function useEditorFileSystem() {
+function EditorFileSystem() {
     const fileSystem = createMutable<EditorFileSystem>({});
     const [activeNote, setActiveNote] = createSignal<
         { path: string; file: EditorFile } | undefined
     >(undefined);
 
-    _init();
-
-    function _init() {
-        EFSClient.fetchFileSystem().then((data) =>
-            Object.assign(fileSystem, data),
-        );
-    }
+    NodesClient()
+        .fetchFileSystem()
+        .then((data) => Object.assign(fileSystem, data));
 
     function openAllFolders(folder: Record<string, EditorFolder>) {
         for (const childFolder of Object.values(folder)) {
@@ -48,43 +45,17 @@ function useEditorFileSystem() {
         }
     }
 
-    function toggleFolderEditMode(path: string) {
-        const node = _getFolderNode(path);
-        if (!node) return;
-        node.editMode = !node.editMode;
+    return {
+        fileSystem,
+        activeNote,
+        setActiveNote,
+        openAllFolders,
+        closeAllFolders,
+    };
+}
 
-        if (!node.editMode) {
-            EFSClient.create({
-                id: node.id,
-                parent_id: path.split("/").slice(0, -1).at(-1),
-                name: node.name,
-                type_: "folder",
-            });
-        }
-    }
-
-    function toggleFileEditMode(path: string) {
-        const node = _getFileNode(path);
-        if (!node) return;
-        node.editMode = !node.editMode;
-
-        if (!node.editMode) {
-            EFSClient.create({
-                id: node.id,
-                parent_id: path.split("/").slice(0, -1).at(-1),
-                name: node.name,
-                type_: "file",
-            });
-        }
-    }
-
-    function toggleOpen(path: string) {
-        const node = _getFolderNode(path);
-        if (!node) return;
-        node.open = !node.open;
-    }
-
-    function addFolder(path: string) {
+function Folder() {
+    function create(path: string) {
         const depth = path.split("/").length;
         if (depth >= 5) return;
 
@@ -104,10 +75,11 @@ function useEditorFileSystem() {
         };
     }
 
-    function addRootFolder() {
+    function createRoot() {
         const key = crypto.randomUUID();
+        const root = _getRoot();
 
-        fileSystem[key] = {
+        root[key] = {
             id: key,
             name: "",
             open: false,
@@ -119,7 +91,51 @@ function useEditorFileSystem() {
         document.getElementById("rename-folder")?.focus();
     }
 
-    function addFile(path: string) {
+    function toggleOpen(path: string) {
+        const node = _getFolderNode(path);
+        if (!node) return;
+        node.open = !node.open;
+    }
+
+    function toggleEditMode(path: string) {
+        const node = _getFolderNode(path);
+        if (!node) return;
+        node.editMode = !node.editMode;
+
+        return node.editMode;
+    }
+
+    function remove(path: string) {
+        const parts = path.split("/");
+        const key = parts.at(-1);
+        if (!key) return;
+
+        const parentPath = parts.slice(0, -1).join("/");
+
+        if (parentPath === "") {
+            const root = _getRoot();
+            delete root[key];
+            return;
+        }
+
+        const node = _getFolderNode(parentPath);
+        if (!node) return;
+
+        delete node.folders[key];
+    }
+
+    return {
+        client: NodesClient(),
+        create,
+        createRoot,
+        toggleOpen,
+        toggleEditMode,
+        remove,
+    };
+}
+
+function Note() {
+    function create(path: string) {
         const node = _getFolderNode(path);
         if (!node) return;
 
@@ -134,25 +150,15 @@ function useEditorFileSystem() {
         };
     }
 
-    function removeFolder(path: string) {
-        const parts = path.split("/");
-        const key = parts.at(-1);
-        if (!key) return;
-
-        const parentPath = parts.slice(0, -1).join("/");
-
-        if (parentPath === "") {
-            delete fileSystem[key];
-            return;
-        }
-
-        const node = _getFolderNode(parentPath);
+    function toggleEditMode(path: string) {
+        const node = _getFileNode(path);
         if (!node) return;
+        node.editMode = !node.editMode;
 
-        delete node.folders[key];
+        return node.editMode;
     }
 
-    function removeFile(path: string) {
+    function remove(path: string) {
         const parts = path.split("/");
         const key = parts.at(-1);
         if (!key) return;
@@ -164,43 +170,16 @@ function useEditorFileSystem() {
         delete node.files[key];
     }
 
-    function _getFileNode(path: string): EditorFile | undefined {
-        const pathParts = path.split("/");
-        const key = path.split("/").at(-1);
-
-        if (!key) return undefined;
-
-        const parentPath = pathParts.slice(0, -1).join("/");
-        const parentFolder = _getFolderNode(parentPath);
-        return parentFolder?.files[key];
-    }
-
-    function _getFolderNode(path: string): EditorFolder | undefined {
-        const pathParts = path.split("/");
-
-        let node: EditorFolder | undefined = fileSystem[pathParts[0]];
-        for (const part of pathParts.slice(1)) {
-            node = node?.folders[part];
-        }
-        return node;
-    }
-
     return {
-        activeNote,
-        setActiveNote,
-
-        fileSystem,
-        addFolder,
-        addRootFolder,
-        addFile,
-        removeFolder,
-        removeFile,
-        toggleOpen,
-        toggleFolderEditMode,
-        toggleFileEditMode,
-        openAllFolders,
-        closeAllFolders,
+        client: NotesClient(),
+        create,
+        toggleEditMode,
+        remove,
     };
 }
 
-export const EFS = useEditorFileSystem();
+export const EFS = {
+    ...EditorFileSystem(),
+    folder: Folder(),
+    note: Note(),
+};

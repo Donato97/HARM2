@@ -1,4 +1,8 @@
-use axum::{extract::State, response::IntoResponse, Extension, Json};
+use axum::{
+    extract::{Path, State},
+    response::IntoResponse,
+    Extension, Json,
+};
 use sea_query::{Expr, OnConflict, Query};
 
 use crate::{
@@ -17,7 +21,6 @@ pub struct CreateBody {
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct UpdateBody {
-    pub id: String,
     pub name: String,
 }
 
@@ -81,6 +84,7 @@ pub async fn create_or_update(
 }
 
 pub async fn update(
+    Path(id): Path<String>,
     Extension(user): Extension<SessionUser>,
     State(state): State<AppState>,
     Json(body): Json<UpdateBody>,
@@ -88,7 +92,7 @@ pub async fn update(
     let query = Query::update()
         .table("nodes")
         .values([("name", body.name.into())])
-        .and_where(Expr::col("id").eq(body.id.clone()))
+        .and_where(Expr::col("id").eq(id.clone()))
         .and_where(Expr::col("user_id").eq(user.id))
         .to_owned();
 

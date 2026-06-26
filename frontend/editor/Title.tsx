@@ -1,6 +1,5 @@
 import { createEffect } from "solid-js";
 import { EFS } from "./filesystem";
-import { EFSClient } from "./filesystem/client";
 
 type Props = {
     onEnter: () => void;
@@ -26,8 +25,7 @@ export default function Title(props: Props) {
         const node = EFS.activeNote()?.file;
         if (!node) return;
 
-        EFSClient.update({
-            id: node.id,
+        EFS.folder.client.update(node.id, {
             name: node.name,
         });
     }

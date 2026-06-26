@@ -14,7 +14,7 @@ export default function Shell() {
 
             <EditorFileSystem />
 
-            <div class="drawer-content h-full w-[98%] sm:w-[80%] md:w-1/2 mx-auto flex flex-col min-h-0 py-20 overflow-y-auto">
+            <div class="drawer-content size-full flex flex-col min-h-0 py-20 overflow-y-auto">
                 <label
                     for="file-system-drawer"
                     class="btn btn-neutral md:hidden absolute top-4 left-4"

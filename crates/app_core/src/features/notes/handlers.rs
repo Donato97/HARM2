@@ -1,3 +1,4 @@
+use super::models::Notes;
 use crate::{
     features::auth::models::SessionUser,
     helper::{api_errors::server_error, ApiResponse},
@@ -10,14 +11,8 @@ use axum::{
 };
 use sea_query::{Expr, Query};
 
-#[derive(Debug, serde::Serialize, sqlx::FromRow)]
-pub struct Note {
-    pub content: String,
-}
-
 #[derive(Debug, serde::Deserialize)]
 pub struct UpdateBody {
-    pub id: String,
     pub content: String,
 }
 
@@ -33,12 +28,13 @@ pub async fn find(
         .and_where(Expr::col("user_id").eq(user.id))
         .to_owned();
 
-    let result: Vec<Note> = state.exe_select(query).await.map_err(server_error)?;
+    let result: Notes = state.exe_select(query).await.map_err(server_error)?;
 
     Ok(Json(result.first()).into_response())
 }
 
 pub async fn update(
+    Path(id): Path<String>,
     Extension(user): Extension<SessionUser>,
     State(state): State<AppState>,
     Json(body): Json<UpdateBody>,
@@ -46,7 +42,7 @@ pub async fn update(
     let query = Query::update()
         .table("notes")
         .values([("content", body.content.into())])
-        .and_where(Expr::col("id").eq(body.id))
+        .and_where(Expr::col("id").eq(id))
         .and_where(Expr::col("user_id").eq(user.id))
         .to_owned();
 

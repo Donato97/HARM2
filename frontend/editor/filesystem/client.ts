@@ -1,34 +1,27 @@
 import { EditorFile, EditorFolder } from ".";
 
-type CreateBody = {
-    id: string;
-    name: string;
-    parent_id?: string;
-    type_: "file" | "folder";
-};
+export function NodesClient() {
+    type CreateBody = {
+        id: string;
+        name: string;
+        parent_id?: string;
+        type_: "file" | "folder";
+    };
 
-type UpdateBody = {
-    id: string;
-    name: string;
-};
+    type UpdateBody = {
+        name: string;
+    };
 
-type UpdateFileBody = {
-    id: string;
-    content: string;
-};
+    type RawNode = {
+        id: string;
+        name: string;
+        type: "file" | "folder";
+        parent_id?: string;
+        created_at: string;
+        updated_at: string;
+    };
 
-type RawNode = {
-    id: string;
-    name: string;
-    type: "file" | "folder";
-    parent_id?: string;
-    created_at: string;
-    updated_at: string;
-};
-
-function EditorFileSystemClient() {
     const url = "/api/filesystem";
-    const fileUrl = "/api/files";
 
     async function fetchFileSystem() {
         function _build(node: RawNode): EditorFolder {
@@ -87,7 +80,7 @@ function EditorFileSystemClient() {
         return fileSystem;
     }
 
-    async function create(body: CreateBody) {
+    async function createOrUpdate(body: CreateBody) {
         await fetch(url, {
             method: "POST",
             headers: {
@@ -97,27 +90,8 @@ function EditorFileSystemClient() {
         });
     }
 
-    async function update(body: UpdateBody) {
-        await fetch(url, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(body),
-        });
-    }
-
-    async function fetchFile(fileId: string) {
-        const response = await fetch(`${fileUrl}/${fileId}`, {
-            method: "GET",
-        });
-        const data: { content: string } = await response.json();
-        console.log(data.content);
-        return data.content;
-    }
-
-    async function updateFile(body: UpdateFileBody) {
-        await fetch(fileUrl, {
+    async function update(id: string, body: UpdateBody) {
+        await fetch(`${url}/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -128,11 +102,39 @@ function EditorFileSystemClient() {
 
     return {
         fetchFileSystem,
-        create,
-        fetchFile,
+        createOrUpdate,
         update,
-        updateFile,
     };
 }
 
-export const EFSClient = EditorFileSystemClient();
+export function NotesClient() {
+    type UpdateBody = {
+        content: string;
+    };
+
+    const url = "/api/files";
+
+    async function find(id: string) {
+        const response = await fetch(`${url}/${id}`, {
+            method: "GET",
+        });
+        const data: { content: string } = await response.json();
+
+        return data.content;
+    }
+
+    async function update(id: string, body: UpdateBody) {
+        await fetch(`${url}/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        });
+    }
+
+    return {
+        find,
+        update,
+    };
+}

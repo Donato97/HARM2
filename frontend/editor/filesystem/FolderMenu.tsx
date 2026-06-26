@@ -17,7 +17,7 @@ export default function FolderMenu(props: {
     }
 
     function newFolder() {
-        EFS.addFolder(props.path);
+        EFS.folder.create(props.path);
 
         const el = document.getElementById("rename-folder");
         if (el) {
@@ -27,7 +27,7 @@ export default function FolderMenu(props: {
     }
 
     function newFile() {
-        EFS.addFile(props.path);
+        EFS.note.create(props.path);
 
         const el = document.getElementById("rename-file");
         if (el) {
@@ -37,7 +37,7 @@ export default function FolderMenu(props: {
     }
 
     function rename() {
-        EFS.toggleFolderEditMode(props.path);
+        EFS.folder.toggleEditMode(props.path);
 
         const el = document.getElementById("rename-folder");
         if (el) {

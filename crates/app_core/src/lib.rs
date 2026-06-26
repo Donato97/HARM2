@@ -23,7 +23,7 @@ pub mod features {
     }
     pub mod notes {
         pub mod handlers;
-        pub mod views;
+        pub mod models;
     }
 }
 pub mod layouts {
@@ -55,7 +55,7 @@ pub fn router() -> Router<AppState> {
             "/api/filesystem",
             post(file_system::handlers::create_or_update),
         )
-        .route("/api/filesystem", put(file_system::handlers::update))
+        .route("/api/filesystem/{id}", put(file_system::handlers::update))
         .route("/api/files/{id}", get(notes::handlers::find))
-        .route("/api/files", put(notes::handlers::update))
+        .route("/api/files/{id}", put(notes::handlers::update))
 }

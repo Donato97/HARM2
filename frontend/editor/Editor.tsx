@@ -1,35 +1,29 @@
 import {
     $createParagraphNode,
     $getRoot,
-    createEditor,
-    CreateEditorArgs,
     EditorState,
+    UpdateListenerPayload,
 } from "lexical";
-import {
-    ListItemNode,
-    ListNode,
-    registerCheckList,
-    registerList,
-} from "@lexical/list";
-import { HeadingNode, registerRichText } from "@lexical/rich-text";
+import { registerCheckList, registerList } from "@lexical/list";
+import { registerRichText } from "@lexical/rich-text";
 import { onCleanup, onMount } from "solid-js";
 import SlashMenu from "./slash-menu/SlashMenu";
 import Title from "./Title";
 import { EFS } from "./filesystem";
-import { EFSClient } from "./filesystem/client";
 import { debounce } from "@solid-primitives/scheduled";
 import { editor } from "./index";
 
 export default function Editor() {
     let editorRef!: HTMLDivElement;
 
-    const save = debounce((editorState: EditorState) => {
+    const save = debounce((e: UpdateListenerPayload) => {
         const id = EFS.activeNote()?.file.id;
         if (!id) return;
 
-        EFSClient.updateFile({
-            id,
-            content: JSON.stringify(editorState),
+        if (e.mutatedNodes === null) return;
+
+        EFS.note.client.update(id, {
+            content: JSON.stringify(e.editorState),
         });
     }, 1000);
 
@@ -41,9 +35,7 @@ export default function Editor() {
             disableTakeFocusOnClick: true,
         });
 
-        editor.registerUpdateListener(({ editorState }) => {
-            save(editorState);
-        });
+        editor.registerUpdateListener(save);
 
         editor.update(() => {
             const root = $getRoot();
@@ -61,16 +53,17 @@ export default function Editor() {
 
     return (
         <>
-            <Title onEnter={() => editor.focus()} />
+            <div class="w-[98%] sm:w-[90%] lg:w-[70%] mx-auto xl:max-w-2xl">
+                <Title onEnter={() => editor.focus()} />
 
-            <div
-                id="editor"
-                class="flex-1 min-h-0 w-full rounded-2xl p-4 mt-4 prose"
-                contentEditable
-                spellcheck="false"
-                ref={editorRef}
-            ></div>
-
+                <div
+                    id="editor"
+                    class="flex-1 min-h-0 p-4 mt-4 prose max-w-full"
+                    contentEditable
+                    spellcheck="false"
+                    ref={editorRef}
+                ></div>
+            </div>
             <SlashMenu editor={editor} />
         </>
     );
