@@ -35,6 +35,7 @@ pub mod layouts {
 }
 
 use axum::{
+    extract::DefaultBodyLimit,
     routing::{get, post, put},
     Router,
 };
@@ -44,7 +45,11 @@ pub use state::{AppState, CustomPool};
 use crate::features::{auth, file_system, games, generic, movies, notes};
 
 pub fn router() -> Router<AppState> {
-    Router::new()
+    let notes_router = Router::new()
+        .route("/api/files/{id}", put(notes::handlers::update))
+        .layer(DefaultBodyLimit::max(10 * 1024 * 1024)); // 10 MB
+
+    let other_router = Router::new()
         .route("/", get(generic::views::index))
         .route("/games", get(games::handlers::index))
         .route("/movies", get(movies::handlers::index))
@@ -56,6 +61,7 @@ pub fn router() -> Router<AppState> {
             post(file_system::handlers::create_or_update),
         )
         .route("/api/filesystem/{id}", put(file_system::handlers::update))
-        .route("/api/files/{id}", get(notes::handlers::find))
-        .route("/api/files/{id}", put(notes::handlers::update))
+        .route("/api/files/{id}", get(notes::handlers::find));
+
+    Router::new().merge(notes_router).merge(other_router)
 }

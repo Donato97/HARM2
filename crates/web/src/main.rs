@@ -8,7 +8,6 @@ use tower_sessions_sqlx_store::SqliteStore;
 
 use crate::features::auth;
 
-pub mod routes;
 pub mod features {
     pub mod auth {
         pub mod handlers;

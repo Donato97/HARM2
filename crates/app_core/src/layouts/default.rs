@@ -8,7 +8,6 @@ pub struct Props {
 }
 
 pub fn default(props: Props) -> Markup {
-    dbg!(&props.path);
     html! {
         (DOCTYPE)
         html lang="it" {

@@ -1,8 +1,6 @@
 import {
-    $createParagraphNode,
-    $getRoot,
-    EditorState,
-    UpdateListenerPayload,
+    $createParagraphNode, $getRoot,
+    UpdateListenerPayload
 } from "lexical";
 import { registerCheckList, registerList } from "@lexical/list";
 import { registerRichText } from "@lexical/rich-text";
@@ -19,8 +17,6 @@ export default function Editor() {
     const save = debounce((e: UpdateListenerPayload) => {
         const id = EFS.activeNote()?.file.id;
         if (!id) return;
-
-        if (e.mutatedNodes === null) return;
 
         EFS.note.client.update(id, {
             content: JSON.stringify(e.editorState),
@@ -51,6 +47,7 @@ export default function Editor() {
         });
     });
 
+
     return (
         <>
             <div class="w-[98%] sm:w-[90%] lg:w-[70%] mx-auto xl:max-w-2xl">
@@ -64,6 +61,7 @@ export default function Editor() {
                     ref={editorRef}
                 ></div>
             </div>
+
             <SlashMenu editor={editor} />
         </>
     );

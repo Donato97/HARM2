@@ -40,11 +40,11 @@ pub mod markup_errors {
     use maud::{html, Markup};
     use std::error::Error;
 
-    pub fn bad_request(mdg: Option<&str>) -> (StatusCode, Markup) {
+    pub fn bad_request(msg: Option<&str>) -> (StatusCode, Markup) {
         let markup = html! {
             h1 { "Bad Request" }
             p {
-                (mdg.unwrap_or(""))
+                (msg.unwrap_or(""))
             }
         };
 

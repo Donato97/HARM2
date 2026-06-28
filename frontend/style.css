@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 @plugin "@iconify/tailwind4";
+
 @plugin "daisyui" {
     themes: luxury --default;
 }
@@ -49,6 +50,7 @@ body {
         &::-webkit-scrollbar {
             width: 10px !important;
         }
+
         &::-webkit-scrollbar-thumb {
             background: var(--color-neutral-content) !important;
             border-radius: 99px;
@@ -77,6 +79,10 @@ nav ul a.menu-active::before {
 }
 
 #editor {
+    img {
+        @apply inline;
+    }
+
     ul {
         li[role="checkbox"] {
             @apply list-none;

@@ -1,7 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { NodesClient, NotesClient } from "./client";
 import { createSignal } from "solid-js";
-import { _getFileNode, _getFolderNode, _getRoot } from "../utils";
 
 export type EditorFile = {
     id: string;
@@ -20,6 +19,8 @@ export type EditorFolder = {
 };
 
 export type EditorFileSystem = Record<string, EditorFolder>;
+
+const store = EditorFileSystem();
 
 function EditorFileSystem() {
     const fileSystem = createMutable<EditorFileSystem>({});
@@ -45,12 +46,40 @@ function EditorFileSystem() {
         }
     }
 
+    function _getRoot(): EditorFileSystem {
+        return fileSystem;
+    }
+
+    function _getFolderNode(path: string): EditorFolder | undefined {
+        const pathParts = path.split("/");
+
+        let node: EditorFolder | undefined = fileSystem[pathParts[0]];
+        for (const part of pathParts.slice(1)) {
+            node = node?.folders[part];
+        }
+        return node;
+    }
+
+    function _getFileNode(path: string): EditorFile | undefined {
+        const pathParts = path.split("/");
+        const key = path.split("/").at(-1);
+
+        if (!key) return undefined;
+
+        const parentPath = pathParts.slice(0, -1).join("/");
+        const parentFolder = _getFolderNode(parentPath);
+        return parentFolder?.files[key];
+    }
+
     return {
         fileSystem,
         activeNote,
         setActiveNote,
         openAllFolders,
         closeAllFolders,
+        _getRoot,
+        _getFolderNode,
+        _getFileNode,
     };
 }
 
@@ -59,7 +88,7 @@ function Folder() {
         const depth = path.split("/").length;
         if (depth >= 5) return;
 
-        const node = _getFolderNode(path);
+        const node = store._getFolderNode(path);
         if (!node) return;
 
         const key = crypto.randomUUID();
@@ -77,7 +106,7 @@ function Folder() {
 
     function createRoot() {
         const key = crypto.randomUUID();
-        const root = _getRoot();
+        const root = store._getRoot();
 
         root[key] = {
             id: key,
@@ -92,13 +121,13 @@ function Folder() {
     }
 
     function toggleOpen(path: string) {
-        const node = _getFolderNode(path);
+        const node = store._getFolderNode(path);
         if (!node) return;
         node.open = !node.open;
     }
 
     function toggleEditMode(path: string) {
-        const node = _getFolderNode(path);
+        const node = store._getFolderNode(path);
         if (!node) return;
         node.editMode = !node.editMode;
 
@@ -113,12 +142,12 @@ function Folder() {
         const parentPath = parts.slice(0, -1).join("/");
 
         if (parentPath === "") {
-            const root = _getRoot();
+            const root = store._getRoot();
             delete root[key];
             return;
         }
 
-        const node = _getFolderNode(parentPath);
+        const node = store._getFolderNode(parentPath);
         if (!node) return;
 
         delete node.folders[key];
@@ -136,7 +165,7 @@ function Folder() {
 
 function Note() {
     function create(path: string) {
-        const node = _getFolderNode(path);
+        const node = store._getFolderNode(path);
         if (!node) return;
 
         const key = crypto.randomUUID();
@@ -151,7 +180,7 @@ function Note() {
     }
 
     function toggleEditMode(path: string) {
-        const node = _getFileNode(path);
+        const node = store._getFileNode(path);
         if (!node) return;
         node.editMode = !node.editMode;
 
@@ -164,7 +193,7 @@ function Note() {
         if (!key) return;
 
         const parentPath = parts.slice(0, -1).join("/");
-        const node = _getFolderNode(parentPath);
+        const node = store._getFolderNode(parentPath);
         if (!node) return;
 
         delete node.files[key];
@@ -179,7 +208,7 @@ function Note() {
 }
 
 export const EFS = {
-    ...EditorFileSystem(),
+    ...store,
     folder: Folder(),
     note: Note(),
 };
