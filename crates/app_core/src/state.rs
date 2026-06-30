@@ -72,13 +72,30 @@ impl AppState {
             CustomPool::Sqlite(pool) => sqlx::query_with(&query, values)
                 .execute(pool)
                 .await?
-                .last_insert_rowid() as u64,
+                .rows_affected() as u64,
             CustomPool::Mysql(pool) => sqlx::query_with(&query, values)
                 .execute(pool)
                 .await?
-                .last_insert_id(),
+                .rows_affected() as u64,
         };
 
         Ok(id)
+    }
+
+    pub async fn exe_delete<S>(&self, stmt: S) -> Result<(), sqlx::Error>
+    where
+        S: QueryStatementBuilder,
+    {
+        let (query, values) = self.build(stmt);
+        match &self.pool {
+            CustomPool::Sqlite(pool) => {
+                sqlx::query_with(&query, values).execute(pool).await?;
+            }
+            CustomPool::Mysql(pool) => {
+                sqlx::query_with(&query, values).execute(pool).await?;
+            }
+        };
+
+        Ok(())
     }
 }

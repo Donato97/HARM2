@@ -1,3 +1,6 @@
+use std::str::FromStr;
+
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use time::Duration;
 
 use app_core::{AppState, CustomPool};
@@ -17,12 +20,20 @@ pub mod features {
 #[tokio::main]
 async fn main() {
     // In dev usa SQLite; in prod sostituisci con MySqlPool::connect(...).
-    let pool = sqlx::SqlitePool::connect("sqlite://crates/web/db.sqlite")
+    let opts = SqliteConnectOptions::from_str("sqlite://crates/web/db.sqlite")
+        .expect("Errore nella configurazione del DB!")
+        .foreign_keys(true);
+
+    let pool = SqlitePoolOptions::new()
+        .connect_with(opts)
         .await
         .expect("Connessione al DB fallita!");
 
     let session_store = SqliteStore::new(pool.clone());
-    session_store.migrate().await;
+    session_store
+        .migrate()
+        .await
+        .expect("Migrazione della sessione DB fallita!");
 
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(false)

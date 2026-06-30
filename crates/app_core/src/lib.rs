@@ -36,7 +36,7 @@ pub mod layouts {
 
 use axum::{
     extract::DefaultBodyLimit,
-    routing::{get, post, put},
+    routing::{delete, get, post, put},
     Router,
 };
 
@@ -61,6 +61,10 @@ pub fn router() -> Router<AppState> {
             post(file_system::handlers::create_or_update),
         )
         .route("/api/filesystem/{id}", put(file_system::handlers::update))
+        .route(
+            "/api/filesystem/{id}",
+            delete(file_system::handlers::delete),
+        )
         .route("/api/files/{id}", get(notes::handlers::find));
 
     Router::new().merge(notes_router).merge(other_router)

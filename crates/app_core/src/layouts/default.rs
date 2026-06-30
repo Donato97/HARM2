@@ -61,6 +61,27 @@ pub fn default(props: Props) -> Markup {
                         }
                     }
                 }
+
+                dialog id="confirm-modal" class="modal" {
+                    div class="modal-box" {
+                        h3 class="text-lg font-bold" {
+                            "Are you sure?"
+                        }
+                        p class="py-4" {
+                            "You are about to delete this folder and all its contents. This action cannot be undone."
+                        }
+                        div class="modal-action" {
+                            form method="dialog" {
+                                button type="submit" class="btn btn-ghost" {
+                                    "Cancel"
+                                }
+                            }
+                            button class="btn btn-primary" {
+                                "Confirm"
+                            }
+                        }
+                    }
+                }
             }
         }
     }

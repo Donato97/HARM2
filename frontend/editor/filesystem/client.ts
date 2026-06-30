@@ -100,10 +100,17 @@ export function NodesClient() {
         });
     }
 
+    async function deleteFolder(id: string) {
+        await fetch(`${url}/${id}`, {
+            method: "DELETE",
+        });
+    }
+
     return {
         fetchFileSystem,
         createOrUpdate,
         update,
+        deleteFolder,
     };
 }
 

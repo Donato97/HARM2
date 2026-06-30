@@ -1,10 +1,12 @@
 import { createSignal, Show } from "solid-js";
 import { EditorFolder, EFS } from ".";
 
-export default function FolderMenu(props: {
+type Props = {
     folder: EditorFolder;
     path: string;
-}) {
+};
+
+export default function FolderMenu(props: Props) {
     const depth = props.path.split("/").length;
     const [open, setOpen] = createSignal(false);
 
@@ -46,6 +48,13 @@ export default function FolderMenu(props: {
         }
     }
 
+    function deleteFolder() {
+        const id = props.folder.id;
+        EFS.folder.client.deleteFolder(id);
+
+        EFS.folder.remove(props.path);
+    }
+
     return (
         <div class="opacity-0 peer-hover:opacity-100 hover:opacity-100 absolute right-0 top-0 p-0">
             <button
@@ -83,6 +92,12 @@ export default function FolderMenu(props: {
                         <button onClick={rename}>
                             <span class="icon-[material-symbols--edit] size-4" />
                             Rename
+                        </button>
+                    </li>
+                    <li>
+                        <button onClick={deleteFolder}>
+                            <span class="icon-[material-symbols--delete-outline] size-4" />
+                            Delete
                         </button>
                     </li>
                 </ul>

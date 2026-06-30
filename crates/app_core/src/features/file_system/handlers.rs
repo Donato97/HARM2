@@ -100,3 +100,19 @@ pub async fn update(
 
     Ok(Json(()).into_response())
 }
+
+pub async fn delete(
+    Path(id): Path<String>,
+    Extension(user): Extension<SessionUser>,
+    State(state): State<AppState>,
+) -> ApiResponse {
+    let query = Query::delete()
+        .from_table("nodes")
+        .and_where(Expr::col("id").eq(id))
+        .and_where(Expr::col("user_id").eq(user.id))
+        .to_owned();
+
+    state.exe_delete(query).await.map_err(server_error)?;
+
+    Ok(Json(()).into_response())
+}
