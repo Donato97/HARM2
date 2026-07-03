@@ -1,15 +1,19 @@
-function open(id: string) {
+const confirmModal = document.getElementById(
+    "confirm-modal",
+) as HTMLDialogElement;
+
+confirmModal.querySelector(".btn-primary")
+
+function askConferm(id: string) {
     _getModal(id).showModal();
 }
 
-function close(id: string) {
+function denyConferm(id: string) {
     _getModal(id).close();
 }
 
-async function exeAction<T>(id: string, action: () => T | Promise<T>) {
-    const modal = _getModal(id);
-    await action();
-    modal.close();
+function hasConferm(id: string): boolean {
+    return _getModal(id).open;
 }
 
 function _getModal(id: string) {
@@ -18,4 +22,4 @@ function _getModal(id: string) {
     return modal;
 }
 
-export default { open, close, exeAction };
+export default { askConferm, denyConferm, exeAction };
