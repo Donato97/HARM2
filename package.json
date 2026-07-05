@@ -8,12 +8,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@lexical/list": "^0.45.0",
-    "@lexical/rich-text": "^0.45.0",
-    "@lexical/selection": "^0.45.0",
+    "@lexical/code-core": "^0.46.0",
+    "@lexical/code-prism": "^0.46.0",
+    "@lexical/list": "^0.46.0",
+    "@lexical/rich-text": "^0.46.0",
+    "@lexical/selection": "^0.46.0",
     "@solid-primitives/scheduled": "^1.5.3",
     "htmx.org": "^4.0.0-beta4",
-    "lexical": "^0.45.0",
+    "lexical": "^0.46.0",
+    "mermaid": "^11.16.0",
     "solid-js": "^1.9.3"
   },
   "devDependencies": {

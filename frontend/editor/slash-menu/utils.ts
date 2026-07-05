@@ -1,6 +1,8 @@
+import { $createCodeNode } from "@lexical/code-core";
 import { $createListNode } from "@lexical/list";
 import { $createHeadingNode } from "@lexical/rich-text";
 import { $getSelection, $isRangeSelection, $isTextNode } from "lexical";
+import { $createMermaidNode } from "../plugins/mermaid";
 
 export const slashMenuItems = [
   {
@@ -37,6 +39,16 @@ export const slashMenuItems = [
     icon: "icon-[material-symbols--checklist]",
     name: "Check list",
     node: () => $createListNode("check"),
+  },
+  {
+    icon: "icon-[material-symbols--code]",
+    name: "Code",
+    node: () => $createCodeNode(),
+  },
+  {
+    icon: "icon-[material-symbols--mermaid]",
+    name: "Mermaid",
+    node: () => $createMermaidNode(),
   },
 ];
 
