@@ -1,17 +1,33 @@
-import { CodeNode, SerializedCodeNode } from "@lexical/code-core";
-import { $getEditor, $getNodeByKey, defineExtension, EditorConfig, NodeKey } from "lexical";
-import mermaid from "mermaid";
+import {
+    $createParagraphNode,
+    $getNodeByKey,
+    $getSelection,
+    $isNodeSelection,
+    COMMAND_PRIORITY_LOW,
+    DecoratorNode,
+    defineExtension,
+    EditorConfig,
+    KEY_BACKSPACE_COMMAND,
+    KEY_DELETE_COMMAND,
+    LexicalEditor,
+    mergeRegister,
+    NodeKey,
+    SerializedLexicalNode,
+    Spread
+} from "lexical";
+import { debounce } from "ts-debounce";
 
-mermaid.initialize({ startOnLoad: false });
+type SerializedMermaidNode = Spread<
+    { code: string },
+    SerializedLexicalNode
+>;
 
-type DisplayMode = "code" | "preview";
+export class MermaidNode extends DecoratorNode<HTMLElement> {
+    code: string;
 
-export class MermaidNode extends CodeNode {
-    __displayMode: DisplayMode = "code";
-
-    constructor(displayMode: DisplayMode = "code", key?: NodeKey) {
-        super("mermaid", key);
-        this.__displayMode = displayMode;
+    constructor(code: string, key?: NodeKey) {
+        super(key);
+        this.code = code;
     }
 
     static getType() {
@@ -19,85 +35,232 @@ export class MermaidNode extends CodeNode {
     }
 
     static clone(node: MermaidNode): MermaidNode {
-        return new MermaidNode(node.__displayMode, node.__key);
+        return new MermaidNode(node.code, node.__key);
     }
 
-    static importJSON(): MermaidNode {
-        return new MermaidNode();
+    static importJSON(json: SerializedMermaidNode): MermaidNode {
+        return new MermaidNode(json.code || "");
     }
 
-    exportJSON(): SerializedCodeNode {
-        return super.exportJSON();
+    exportJSON(): SerializedMermaidNode {
+        return { ...super.exportJSON(), type: "mermaid", version: 1, code: this.code };
     }
 
-    createDOM(config: EditorConfig): HTMLElement {
-        const editor = $getEditor();
-        const key = this.getKey();
+    createDOM(_: EditorConfig, editor: LexicalEditor): HTMLElement {
+        const container = document.createElement("div");
+        container.classList.add(
+            "my-6",
+            "rounded-box",
+            "bg-base-200",
+            "p-2",
+            "flex",
+            "flex-col",
+            "gap-2",
+            "items-end"
+        );
+        const textarea = document.createElement("textarea");
+        textarea.value = this.code;
+        textarea.classList.add(
+            "w-full",
+            "resize-none",
+            "font-mono!",
+            "text-xs",
+            "overflow-y-hidden"
+        );
+        textarea.addEventListener("keydown", (e) => {
+            e.stopPropagation();
+            if (e.key === "Enter" && e.shiftKey) {
+                e.preventDefault();
+                textarea.blur();
+                editor.update(() => {
+                    const self = $getNodeByKey(this.getKey());
+                    if (!self) return;
 
-        const wrapper = document.createElement("div");
-        wrapper.classList.add("bg-base-200", "rounded-box");
+                    const newP = $createParagraphNode();
+                    self.insertAfter(newP);
+                    newP.selectStart();
+                });
+            }
+        });
 
-        const previewEl = document.createElement("div");
-        wrapper.appendChild(previewEl);
+        const preview = document.createElement("div");
+        preview.classList.add("w-full", "h-fit");
+
+        const menuItems = [
+            {
+                label: "Zoom",
+                active: false,
+                action: () => {
+                    const dialog = document.createElement("dialog");
+                    dialog.classList.add("modal");
+                    dialog.addEventListener("close", () => dialog.remove());
+                    const modalBox = document.createElement("div");
+                    modalBox.classList.add("modal-box", "w-11/12", "max-w-5xl");
+                    const closeButton = document.createElement("button");
+                    closeButton.classList.add(
+                        "btn",
+                        "btn-sm",
+                        "btn-circle",
+                        "absolute",
+                        "right-2",
+                        "top-2"
+                    );
+                    closeButton.textContent = "✕";
+                    closeButton.addEventListener("click", () => dialog.close());
+
+                    modalBox.appendChild(closeButton);
+                    modalBox.appendChild(preview.cloneNode(true));
+
+                    dialog.appendChild(modalBox);
+                    container.appendChild(dialog);
+                    dialog.showModal();
+                }
+            },
+            {
+                label: "Code",
+                active: false,
+                action: () => {
+                    textarea.remove();
+                    preview.remove();
+                    container.appendChild(textarea);
+                    autoGrow();
+                }
+            },
+            {
+                label: "Preview",
+                active: true,
+                action: () => {
+                    textarea.remove();
+                    preview.remove();
+                    container.appendChild(preview);
+                },
+            },
+            {
+                label: "Both",
+                active: false,
+                action: () => {
+                    textarea.remove();
+                    preview.remove();
+                    container.appendChild(textarea);
+                    container.appendChild(preview);
+                    autoGrow();
+                }
+            },
+        ];
 
         const menu = document.createElement("ul");
-        menu.classList.add("bg-base-100", "menu", "menu-xs", "menu-horizontal", "m-1!", "rounded-box", "p-1");
-        const codeButton = document.createElement("button");
-        codeButton.classList.add("btn", "btn-xs", "btn-ghost");
-        codeButton.textContent = "Code";
-        const previewButton = document.createElement("button");
-        previewButton.classList.add("btn", "btn-xs", "btn-ghost");
-        previewButton.textContent = "Preview";
-
-        previewButton.addEventListener("click", () => {
-            let code = "";
-            editor.read(() => {
-                const node = $getNodeByKey(key);
-                code = node ? node.getTextContent() : "";
-            });
-            renderMermaid(previewEl, code);
+        menu.classList.add(
+            "menu",
+            "menu-horizontal",
+            "menu-xs",
+            "m-0!",
+            "p-1",
+            "bg-base-100",
+            "rounded-box"
+        );
+        menuItems.forEach((item) => {
+            const li = document.createElement("li");
+            const button = document.createElement("button");
+            button.textContent = item.label;
+            button.addEventListener("click", item.action);
+            li.classList.add("m-0!", "p-0!");
+            li.appendChild(button);
+            menu.appendChild(li);
         });
 
 
-        menu.appendChild(codeButton);
-        menu.appendChild(previewButton);
-        wrapper.appendChild(menu);
+        container.appendChild(menu);
+        container.appendChild(preview);
 
-        const code = super.createDOM(config);
-        wrapper.appendChild(code);
+        const autoGrow = () => {
+            textarea.style.height = "auto";
+            textarea.style.height = textarea.scrollHeight + "px";
+        };
 
-        return wrapper;
+        textarea.addEventListener("input", () => {
+            debounceRenderMermaid(preview, textarea.value);
+            this.code = textarea.value;
+            autoGrow();
+        });
+
+        requestAnimationFrame(() => {
+            autoGrow();
+            renderMermaid(preview, textarea.value);
+        });
+
+        return container;
     }
 
-    getDOMSlot(element: HTMLElement) {
-        return super.getDOMSlot(element.querySelector("code") as HTMLElement);
+    updateDOM() {
+        return false;
     }
 
-    updateDOM(prevNode: this, dom: HTMLElement, config: EditorConfig): boolean {
-        return super.updateDOM(prevNode, dom.querySelector("code") as HTMLElement, config);
+    isInline() {
+        return false;
+    }
+
+    isKeyboardSelectable() {
+        return false;
     }
 }
 
 export const MermaidExtension = defineExtension({
     name: "mermaid",
     nodes: [MermaidNode],
-    register(editor) { return () => { }; },
+    register(editor) {
+        const blockDeletion = () => {
+            const selection = $getSelection();
+            // se è selezionato un MermaidNode come nodo, blocca la cancellazione
+            if ($isNodeSelection(selection)) {
+                const nodes = selection.getNodes();
+                if (nodes.some($isMermaidNode)) {
+                    return true; // true = "gestito", blocca il comportamento di default
+                }
+            }
+            return false;
+        };
+
+        return mergeRegister(
+            editor.registerCommand(KEY_BACKSPACE_COMMAND, blockDeletion, COMMAND_PRIORITY_LOW),
+            editor.registerCommand(KEY_DELETE_COMMAND, blockDeletion, COMMAND_PRIORITY_LOW),
+        );
+    },
 })
 
-export function $createMermaidNode(): MermaidNode {
-    return new MermaidNode();
+export function $createMermaidNode(code?: string): MermaidNode {
+    return new MermaidNode(code ?? "");
 }
 
 export function $isMermaidNode(node: any): node is MermaidNode {
     return node instanceof MermaidNode;
 }
 
+let mermaidIstance: typeof import("mermaid") | undefined;
+
+async function getMermaid() {
+    if (!mermaidIstance) {
+        mermaidIstance = await import("mermaid");
+        mermaidIstance.default.initialize({ startOnLoad: false, theme: "dark", securityLevel: "strict" });
+    }
+    return mermaidIstance;
+}
+
 async function renderMermaid(previewEl: HTMLElement, code: string) {
+    if (!previewEl.isConnected) return;
+
+    const prevHeight = previewEl.offsetHeight;
+    previewEl.style.height = prevHeight + "px";
+
     try {
-        const uuid = crypto.randomUUID();
-        const { svg } = await mermaid.render(uuid, code.trim());
+        const id = "mermaid-" + crypto.randomUUID();
+        const mermaid = (await getMermaid()).default;
+        const { svg } = await mermaid.render(id, code.trim(), previewEl);
         previewEl.innerHTML = svg;
     } catch (e) {
         previewEl.textContent = e instanceof Error ? e.message : String(e);
+    } finally {
+        previewEl.style.height = "auto";
     }
 }
+
+const debounceRenderMermaid = debounce(renderMermaid, 800);

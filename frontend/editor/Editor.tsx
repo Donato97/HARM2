@@ -1,5 +1,6 @@
 import {
     $createParagraphNode, $getRoot,
+    $isDecoratorNode,
     UpdateListenerPayload
 } from "lexical";
 import { registerCheckList, registerList } from "@lexical/list";
@@ -39,6 +40,18 @@ export default function Editor() {
                 root.append($createParagraphNode());
             }
         });
+
+        editor.getRootElement()?.addEventListener("click", () => {
+            editor.update(() => {
+                const rootNode = $getRoot();
+                const last = rootNode.getLastChild();
+                if (last && $isDecoratorNode(last)) {
+                    const paragraph = $createParagraphNode();
+                    rootNode.append(paragraph);
+                    paragraph.selectStart();
+                }
+            });
+        })
 
         onCleanup(() => {
             cleanupRichText();

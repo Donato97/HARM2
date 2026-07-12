@@ -2,6 +2,7 @@ import { $getSelection, $isRangeSelection, $isTextNode } from "lexical";
 import { createMemo, createSignal } from "solid-js";
 import { slashMenuItems, validatedSlashMenuQuery } from "./utils";
 import { $setBlocksType } from "@lexical/selection";
+import { $insertNodeToNearestRoot } from "@lexical/utils";
 
 export default function useSlashMenu() {
   const [isOpen, setIsOpen] = createSignal(false);
@@ -46,7 +47,15 @@ export default function useSlashMenu() {
     const node = selection.anchor.getNode();
     if ($isTextNode(node)) node.setTextContent("");
 
-    $setBlocksType(selection, filteredItems()[selectedIndex()].node);
+    const item = filteredItems()[selectedIndex()];
+
+    if (item.insert) {
+      // decorator / nodi da inserire
+      $insertNodeToNearestRoot(item.node());
+    } else {
+      // conversione di blocco (heading, quote, list...)
+      $setBlocksType(selection, item.node as any);
+    }
 
     setIsOpen(false);
     return true;

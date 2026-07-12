@@ -48,6 +48,7 @@ export const slashMenuItems = [
   {
     icon: "icon-[material-symbols--mermaid]",
     name: "Mermaid",
+    insert: true,
     node: () => $createMermaidNode(),
   },
 ];
