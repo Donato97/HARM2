@@ -1,18 +1,19 @@
 use crate::helper::vite::load_manifest_entry;
-use maud::{html, Markup, DOCTYPE};
+use hypertext::prelude::*;
 
-pub fn auth(slot: Markup) -> Markup {
-    html! {
-        (DOCTYPE)
-        html lang="it" {
-            head {
-                meta charset="utf-8";
-                meta name="viewport" content="width=device-width, initial-scale=1";
-                title { "HARM2" }
+pub fn auth<S: Renderable>(slot: S) -> Rendered<String> {
+    rsx! {
+        <!DOCTYPE html>
+        <html lang="it">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>"HARM2"</title>
 
                 (load_manifest_entry("frontend/style.css"))
-            }
-            body { (slot) }
-        }
+            </head>
+            <body>(slot)</body>
+        </html>
     }
+    .render()
 }

@@ -62,6 +62,7 @@ pub async fn sign_up(
 
     let new_user = SessionUser {
         id,
+        steam_id: None,
         email: body.email,
     };
 
@@ -80,7 +81,7 @@ pub async fn sign_in(
 ) -> AppResponse {
     let query = Query::select()
         .from("users")
-        .columns(["id", "email", "password"])
+        .columns(["id", "steam_id", "email", "password"])
         .and_where(Expr::column("email").eq(&body.email))
         .to_owned();
 
@@ -101,6 +102,7 @@ pub async fn sign_in(
 
     let session_user = SessionUser {
         id: user.id,
+        steam_id: user.steam_id.clone(),
         email: body.email,
     };
 

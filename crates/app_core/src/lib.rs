@@ -42,7 +42,7 @@ use axum::{
 
 pub use state::{AppState, CustomPool};
 
-use crate::features::{auth, file_system, games, generic, movies, notes};
+use crate::features::{auth, file_system, generic, movies, notes};
 
 pub fn router() -> Router<AppState> {
     let notes_router = Router::new()
@@ -51,7 +51,6 @@ pub fn router() -> Router<AppState> {
 
     let other_router = Router::new()
         .route("/", get(generic::views::index))
-        .route("/games", get(games::handlers::index))
         .route("/movies", get(movies::handlers::index))
         .route("/sign-up", get(auth::handlers::sign_up))
         .route("/sign-in", get(auth::handlers::sign_in))

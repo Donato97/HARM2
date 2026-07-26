@@ -5,6 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [solid(), tailwindcss()],
   build: {
+    watch: {
+      include: ["frontend/**/*"],
+    },
     manifest: true,
     rollupOptions: {
       input: {

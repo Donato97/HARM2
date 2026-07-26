@@ -4,16 +4,23 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use time::Duration;
 
 use app_core::{AppState, CustomPool};
-use axum::{middleware, routing::post};
+use axum::{
+    middleware,
+    routing::{get, post},
+};
 use tower_http::services::ServeDir;
-use tower_sessions::{Expiry, SessionManagerLayer};
+use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::SqliteStore;
 
-use crate::features::auth;
+use crate::features::{auth, games};
 
 pub mod features {
     pub mod auth {
         pub mod handlers;
+    }
+    pub mod games {
+        pub mod handlers;
+        pub mod views;
     }
 }
 
@@ -36,6 +43,7 @@ async fn main() {
         .expect("Migrazione della sessione DB fallita!");
 
     let session_layer = SessionManagerLayer::new(session_store)
+        .with_same_site(SameSite::Lax)
         .with_secure(false)
         .with_expiry(Expiry::OnInactivity(Duration::days(7)));
 
@@ -48,6 +56,8 @@ async fn main() {
         .route("/sign-up", post(auth::handlers::sign_up))
         .route("/sign-in", post(auth::handlers::sign_in))
         .route("/sign-out", post(auth::handlers::sign_out))
+        .route("/games", get(games::handlers::index))
+        .route("/steam-login", get(games::handlers::steam_login))
         .layer(middleware::from_fn(auth::handlers::middleware))
         .layer(session_layer)
         .nest_service("/assets", ServeDir::new("dist/assets"))

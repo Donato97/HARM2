@@ -1,11 +1,11 @@
 use axum::{http::StatusCode, response::Response, Json};
-use maud::Markup;
+use hypertext::prelude::*;
 
-pub type AppResponse = Result<Response, (StatusCode, Markup)>;
+pub type AppResponse = Result<Response, (StatusCode, Rendered<String>)>;
 pub type ApiResponse = Result<Response, (StatusCode, Json<serde_json::Value>)>;
 
 pub mod api_errors {
-    use axum::{Json, http::StatusCode};
+    use axum::{http::StatusCode, Json};
     use serde_json::json;
 
     pub fn bad_request(msg: Option<&str>) -> (StatusCode, Json<serde_json::Value>) {
@@ -37,40 +37,41 @@ pub mod api_errors {
 
 pub mod markup_errors {
     use axum::http::StatusCode;
-    use maud::{html, Markup};
+    use hypertext::prelude::*;
     use std::error::Error;
 
-    pub fn bad_request(msg: Option<&str>) -> (StatusCode, Markup) {
-        let markup = html! {
-            h1 { "Bad Request" }
-            p {
-                (msg.unwrap_or(""))
-            }
-        };
+    pub fn bad_request(msg: Option<&str>) -> (StatusCode, Rendered<String>) {
+        let markup = rsx! {
+            <h1> "Bad Request" </h1>
+            <p> (msg.unwrap_or("")) </p>
+        }
+        .render();
 
         (StatusCode::BAD_REQUEST, markup)
     }
 
-    pub fn not_found() -> (StatusCode, Markup) {
-        let markup = html! {
-            h1 { "Not Found" }
-        };
+    pub fn not_found() -> (StatusCode, Rendered<String>) {
+        let markup = rsx! {
+            <h1> "Not Found" </h1>
+        }
+        .render();
 
         (StatusCode::NOT_FOUND, markup)
     }
 
-    pub fn server_error(e: impl Error) -> (StatusCode, Markup) {
-        let markup = html! {
-            h1 { "Server Error" }
-            p { (e.to_string()) }
-        };
+    pub fn server_error(e: impl Error) -> (StatusCode, Rendered<String>) {
+        let markup = rsx! {
+            <h1> "Server Error" </h1>
+            <p> (e.to_string()) </p>
+        }
+        .render();
 
         (StatusCode::INTERNAL_SERVER_ERROR, markup)
     }
 }
 
 pub mod vite {
-    use maud::{html, Markup};
+    use hypertext::prelude::*;
     use serde::Deserialize;
     use std::{collections::HashMap, error::Error};
 
@@ -88,23 +89,19 @@ pub mod vite {
         Ok(json)
     }
 
-    pub fn load_manifest_entry(file_name: &str) -> Markup {
-        let manifest = match load_manifest() {
-            Ok(manifest) => manifest,
-            Err(_) => return html! {},
-        };
+    pub fn load_manifest_entry(file_name: &str) -> impl Renderable {
+        let file = load_manifest()
+            .ok()
+            .and_then(|m| m.get(file_name).map(|e| e.file.clone()));
 
-        match manifest.get(file_name) {
-            Some(entry) => {
-                if entry.file.ends_with(".css") {
-                    let markup = html! { link rel="stylesheet" href=(entry.file) {}; };
-                    markup
-                } else {
-                    let markup = html! { script src=(entry.file) type="module" {}; };
-                    markup
+        rsx! {
+            @if let Some(file) = &file {
+                @if file.ends_with(".css") {
+                    <link rel="stylesheet" href=(file)>
+                } @else {
+                    <script src=(file) type="module"></script>
                 }
             }
-            None => html! {},
         }
     }
 }

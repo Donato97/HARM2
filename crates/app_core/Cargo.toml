@@ -8,7 +8,6 @@ crate-type = ["lib"]
 
 [dependencies]
 axum = { workspace = true }
-maud = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tower-http = { workspace = true }
@@ -16,3 +15,4 @@ sqlx = { workspace = true }
 sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
 reqwest = { workspace = true }
+hypertext = { workspace = true }

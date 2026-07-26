@@ -1,10 +1,11 @@
-use maud::{html, Markup};
+use axum::response::IntoResponse;
+use hypertext::prelude::*;
 
-use crate::layouts;
+use crate::{helper::AppResponse, layouts};
 
-pub async fn index() -> Markup {
-    let markup = html! {
-        div class="h-full" id="root" {}
+pub async fn index() -> AppResponse {
+    let markup = rsx! {
+        <div class="h-full" id="root"></div>
     };
 
     let layout_props = layouts::default::Props {
@@ -12,5 +13,5 @@ pub async fn index() -> Markup {
         path: "".to_string(),
     };
 
-    layouts::default(layout_props)
+    Ok(layouts::default(layout_props).into_response())
 }

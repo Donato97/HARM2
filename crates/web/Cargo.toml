@@ -12,7 +12,6 @@ app_core = { path = "../app_core" }
 axum = { workspace = true }
 tokio = { workspace = true }
 sqlx = { workspace = true }
-maud = { workspace = true }
 sea-query = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -21,5 +20,6 @@ tower-sessions = { workspace = true }
 tower-sessions-sqlx-store = { workspace = true }
 time = { workspace = true }
 reqwest = { workspace = true }
+hypertext = { workspace = true }
 
 argon2 = { version = "0.5.3", features = ["std"] }
