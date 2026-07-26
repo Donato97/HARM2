@@ -35,29 +35,29 @@ export default function File(props: FileProps) {
             path: props.path,
             file: props.file,
         });
-        const content = await EFS.note.client.find(
-            props.file.id,
-        );
+        const content = await EFS.note.client.find(props.file.id);
 
+        console.log(content);
         if (content) {
-            const state = editor.parseEditorState(content);
-            editor.setEditorState(state);
+            const state = JSON.parse(content);
+            console.log(state);
+            editor.commands.setContent(state);
+            /* const state = editor.parseEditorState(content);
+            editor.setEditorState(state); */
         } else {
-            editor.update(() => {
+            editor.commands.setContent("<p>New file</p>");
+            /* editor.update(() => {
                 const root = $getRoot();
                 root.clear();
                 root.append($createParagraphNode());
-            });
+            }); */
         }
     }
 
     return (
         <>
             <Show when={!props.file.editMode}>
-                <button
-                    onclick={onclick}
-                    class="peer"
-                >
+                <button onclick={onclick} class="peer">
                     <span class="icon-[material-symbols--notes] size-4 shrink-0 grow-0" />
                     <span class="truncate">{props.file.name}</span>
                 </button>
