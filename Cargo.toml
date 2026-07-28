@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/app_core", "crates/web", "crates/desktop"]
 
 [workspace.dependencies]
-axum = "0.8"
+axum = { version = "0.8", features = ["multipart"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -16,3 +16,5 @@ sea-query = "0.32.7"
 sea-query-binder = { version = "0.7.0", features = ["sqlx", "sqlx-mysql", "sqlx-sqlite"] }
 reqwest = { version = "0.13", features = [ "form" ] }
 hypertext = { version = "0.12.1", features = [ "axum", "htmx" ] }
+uuid = { version = "1.24.0", features = [ "v4" ] }
+infer = "0.22.0"

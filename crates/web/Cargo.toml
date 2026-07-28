@@ -21,5 +21,8 @@ tower-sessions-sqlx-store = { workspace = true }
 time = { workspace = true }
 reqwest = { workspace = true }
 hypertext = { workspace = true }
+uuid = { workspace = true }
+infer = { workspace = true }
+
 
 argon2 = { version = "0.5.3", features = ["std"] }

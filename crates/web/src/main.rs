@@ -12,7 +12,7 @@ use tower_http::services::ServeDir;
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::SqliteStore;
 
-use crate::features::{auth, games};
+use crate::features::{auth, games, storage};
 
 pub mod features {
     pub mod auth {
@@ -21,6 +21,9 @@ pub mod features {
     pub mod games {
         pub mod handlers;
         pub mod views;
+    }
+    pub mod storage {
+        pub mod handlers;
     }
 }
 
@@ -58,6 +61,8 @@ async fn main() {
         .route("/sign-out", post(auth::handlers::sign_out))
         .route("/games", get(games::handlers::index))
         .route("/steam-login", get(games::handlers::steam_login))
+        .route("/storage/upload", post(storage::handlers::upload))
+        .nest_service("/storage", ServeDir::new("storage"))
         .layer(middleware::from_fn(auth::handlers::middleware))
         .layer(session_layer)
         .nest_service("/assets", ServeDir::new("dist/assets"))
