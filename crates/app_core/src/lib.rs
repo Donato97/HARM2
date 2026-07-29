@@ -4,6 +4,7 @@ pub mod features {
     pub mod auth {
         pub mod handlers;
         pub mod models;
+        pub mod repositories;
         pub mod views;
     }
     pub mod generic {

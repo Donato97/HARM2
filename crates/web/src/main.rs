@@ -17,6 +17,7 @@ use crate::features::{auth, games, storage};
 pub mod features {
     pub mod auth {
         pub mod handlers;
+        pub mod requests;
     }
     pub mod games {
         pub mod handlers;

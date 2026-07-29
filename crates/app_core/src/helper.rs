@@ -1,8 +1,11 @@
 use axum::{http::StatusCode, response::Response, Json};
 use hypertext::prelude::*;
 
-pub type AppResponse = Result<Response, (StatusCode, Rendered<String>)>;
-pub type ApiResponse = Result<Response, (StatusCode, Json<serde_json::Value>)>;
+pub type AppError = (StatusCode, Rendered<String>);
+pub type ApiError = (StatusCode, Json<serde_json::Value>);
+
+pub type AppResponse = Result<Response, AppError>;
+pub type ApiResponse = Result<Response, ApiError>;
 
 pub mod api_errors {
     use axum::{http::StatusCode, Json};
