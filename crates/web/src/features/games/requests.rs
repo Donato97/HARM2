@@ -19,8 +19,9 @@ impl FromRequestParts<AppState> for SteamLoginRequest {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let Query(params) =
-            Query::<HashMap<String, String>>::from_request_parts(parts, state).await?;
+        let Query(params) = Query::<HashMap<String, String>>::from_request_parts(parts, state)
+            .await
+            .map_err(|_| AppError::BadRequest("Invalid query parameters"))?;
 
         let Extension(user) = Extension::<SessionUser>::from_request_parts(parts, state).await?;
 

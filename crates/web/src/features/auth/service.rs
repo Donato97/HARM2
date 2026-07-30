@@ -23,7 +23,18 @@ impl AuthService {
     pub async fn sign_up(&self, body: AuthBody) -> Result<SessionUser, AppError> {
         let hash = self.hash_password(&body.password)?;
 
-        let id = self.user_repo.create(&body.email, &hash).await?;
+        let id = self
+            .user_repo
+            .create(&body.email, &hash)
+            .await
+            .map_err(|e| {
+                if let Some(db_err) = e.as_database_error() {
+                    if db_err.is_unique_violation() {
+                        return AppError::BadRequest("Email already exists");
+                    }
+                }
+                AppError::InternalServerError(e.into())
+            })?;
 
         let session_user = SessionUser {
             id,
@@ -39,7 +50,7 @@ impl AuthService {
             .user_repo
             .find_by_email(&body.email)
             .await?
-            .ok_or(AppError::NotFound)?;
+            .ok_or(AppError::BadRequest("Invalid credentials"))?;
 
         self.verify_password(&body.password, &user.password)?;
 

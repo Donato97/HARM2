@@ -16,7 +16,7 @@ pub async fn upload(Extension(user): Extension<SessionUser>, mut files: Multipar
             let path = service.save(&path, data).await?;
 
             let response_json = serde_json::json!({
-                "url": path
+                "url": format!("/{path}")
             });
             return Ok(Json(response_json).into_response());
         }

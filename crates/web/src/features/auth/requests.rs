@@ -27,7 +27,9 @@ impl FromRequest<AppState> for AuthRequest {
             .map_err(|(_, msg)| AppError::InternalServerError(anyhow::anyhow!("{msg}")))?;
 
         let req = Request::from_parts(parts, body);
-        let Form(body) = Form::<AuthBody>::from_request(req, state).await?;
+        let Form(body) = Form::<AuthBody>::from_request(req, state)
+            .await
+            .map_err(|_| AppError::BadRequest("Invalid body"))?;
 
         Ok(Self { session, body })
     }

@@ -55,9 +55,13 @@ impl SteamService {
             return Err(AppError::BadRequest("Invalid openid"));
         }
 
-        match params.get("openid.claimed_id") {
-            Some(id) => Ok(id.clone()),
-            None => Err(AppError::BadRequest("Missing openid.claimed_id")),
-        }
+        let steam_id = params
+            .get("openid.claimed_id")
+            .ok_or(AppError::BadRequest("Missing openid.claimed_id"))?
+            .split("/")
+            .last()
+            .context("Steam id missing from openid.claimed_id")?;
+
+        Ok(steam_id.to_string())
     }
 }
