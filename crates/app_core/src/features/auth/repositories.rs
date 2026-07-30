@@ -33,4 +33,16 @@ impl UserRepository {
 
         Ok(result.into_iter().next())
     }
+
+    pub async fn update_steam_id(&self, user_id: u64, steam_id: &str) -> Result<(), sqlx::Error> {
+        let query = sea_query::Query::update()
+            .table("users")
+            .values([("steam_id", steam_id.into())])
+            .and_where(Expr::col("id").eq(user_id))
+            .to_owned();
+
+        self.state.exe_update(query).await?;
+
+        Ok(())
+    }
 }

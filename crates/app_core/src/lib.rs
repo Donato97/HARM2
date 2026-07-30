@@ -1,4 +1,5 @@
 pub mod helper;
+pub mod responses;
 pub mod state;
 pub mod features {
     pub mod auth {

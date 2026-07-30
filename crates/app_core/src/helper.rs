@@ -28,7 +28,7 @@ pub mod api_errors {
         (StatusCode::NOT_FOUND, Json(body))
     }
 
-    pub fn server_error(e: impl std::error::Error) -> (StatusCode, Json<serde_json::Value>) {
+    pub fn server_error(e: impl std::fmt::Display) -> (StatusCode, Json<serde_json::Value>) {
         let body = json!({
             "error": "Server Error",
             "message": e.to_string()
@@ -41,7 +41,7 @@ pub mod api_errors {
 pub mod markup_errors {
     use axum::http::StatusCode;
     use hypertext::prelude::*;
-    use std::error::Error;
+    use std::fmt::Display;
 
     pub fn bad_request(msg: Option<&str>) -> (StatusCode, Rendered<String>) {
         let markup = rsx! {
@@ -62,7 +62,7 @@ pub mod markup_errors {
         (StatusCode::NOT_FOUND, markup)
     }
 
-    pub fn server_error(e: impl Error) -> (StatusCode, Rendered<String>) {
+    pub fn server_error(e: impl Display) -> (StatusCode, Rendered<String>) {
         let markup = rsx! {
             <h1> "Server Error" </h1>
             <p> (e.to_string()) </p>

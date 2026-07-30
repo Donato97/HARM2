@@ -18,3 +18,4 @@ reqwest = { version = "0.13", features = [ "form" ] }
 hypertext = { version = "0.12.1", features = [ "axum", "htmx" ] }
 uuid = { version = "1.24.0", features = [ "v4" ] }
 infer = "0.22.0"
+anyhow = "1.0.104"

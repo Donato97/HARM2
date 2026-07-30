@@ -22,10 +22,13 @@ pub mod features {
     }
     pub mod games {
         pub mod handlers;
+        pub mod requests;
+        pub mod services;
         pub mod views;
     }
     pub mod storage {
         pub mod handlers;
+        pub mod services;
     }
 }
 
@@ -49,7 +52,7 @@ async fn main() {
 
     let session_layer = SessionManagerLayer::new(session_store)
         .with_same_site(SameSite::Lax)
-        .with_secure(false)
+        .with_secure(!cfg!(debug_assertions))
         .with_expiry(Expiry::OnInactivity(Duration::days(7)));
 
     let client = reqwest::Client::builder()

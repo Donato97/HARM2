@@ -23,6 +23,7 @@ reqwest = { workspace = true }
 hypertext = { workspace = true }
 uuid = { workspace = true }
 infer = { workspace = true }
+anyhow = { workspace = true }
 
 
 argon2 = { version = "0.5.3", features = ["std"] }

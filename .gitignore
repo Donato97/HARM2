@@ -5,3 +5,6 @@ desktop/gen
 *.log
 
 /storage
+
+crates/web/db.sqlite-shm
+crates/web/db.sqlite-wal

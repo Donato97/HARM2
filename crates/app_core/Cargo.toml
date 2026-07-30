@@ -16,3 +16,4 @@ sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
 reqwest = { workspace = true }
 hypertext = { workspace = true }
+anyhow = { workspace = true }
