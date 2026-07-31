@@ -24,7 +24,7 @@ fn detect_extension(data: &Bytes) -> Result<&str, ApiError> {
     Ok(ext)
 }
 
-fn ext_from_mime(mime: &str) -> Option<&str> {
+fn ext_from_mime(mime: &str) -> Option<&'static str> {
     match mime {
         "image/png" => Some("png"),
         "image/jpeg" => Some("jpg"),

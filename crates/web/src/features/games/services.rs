@@ -32,7 +32,7 @@ impl SteamService {
     }
 
     async fn validate_open_id(&self, mut params: Params) -> Result<String, AppError> {
-        if params.get("openid.mode").is_some_and(|s| s != "id_res") {
+        if params.get("openid.mode").is_none_or(|s| s != "id_res") {
             return Err(AppError::BadRequest("Invalid openid.mode"));
         }
 

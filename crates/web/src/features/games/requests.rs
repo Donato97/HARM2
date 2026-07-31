@@ -57,7 +57,7 @@ impl FromRequestParts<AppState> for SteamLoginPageRequest {
         parts: &mut Parts,
         _state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let uri = parts.uri.to_string();
+        let uri = parts.uri.path().to_string();
         let user = parts.extensions.remove::<SessionUser>().ok_or_else(|| {
             AppError::InternalServerError(anyhow::anyhow!("SessionUser extension missing"))
         })?;
