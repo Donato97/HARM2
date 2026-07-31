@@ -56,7 +56,7 @@ impl AuthService {
 
         Ok(SessionUser {
             id: user.id,
-            steam_id: user.steam_id.clone(),
+            steam_id: user.steam_id,
             email: body.email,
         })
     }

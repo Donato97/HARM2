@@ -1,7 +1,7 @@
 use app_core::{responses::markup::AppError, AppState};
 use axum::{
-    extract::{FromRequest, FromRequestParts, Request},
-    Form,
+    extract::{FromRequest, Request},
+    Form, RequestExt,
 };
 use tower_sessions::Session;
 
@@ -12,6 +12,7 @@ pub struct AuthBody {
 }
 
 pub struct AuthRequest {
+    pub state: AppState,
     pub session: Session,
     pub body: AuthBody,
 }
@@ -19,18 +20,21 @@ pub struct AuthRequest {
 impl FromRequest<AppState> for AuthRequest {
     type Rejection = AppError;
 
-    async fn from_request(req: Request, state: &AppState) -> Result<Self, Self::Rejection> {
-        let (mut parts, body) = req.into_parts();
-
-        let session = Session::from_request_parts(&mut parts, state)
+    async fn from_request(mut req: Request, state: &AppState) -> Result<Self, Self::Rejection> {
+        let session = req
+            .extract_parts::<Session>()
             .await
-            .map_err(|(_, msg)| AppError::InternalServerError(anyhow::anyhow!("{msg}")))?;
+            .map_err(|(_, msg)| AppError::InternalServerError(anyhow::anyhow!(msg)))?;
 
-        let req = Request::from_parts(parts, body);
-        let Form(body) = Form::<AuthBody>::from_request(req, state)
+        let Form(body) = req
+            .extract()
             .await
             .map_err(|_| AppError::BadRequest("Invalid body"))?;
 
-        Ok(Self { session, body })
+        Ok(Self {
+            state: state.clone(),
+            session,
+            body,
+        })
     }
 }

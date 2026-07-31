@@ -1,16 +1,15 @@
 use app_core::{features::auth::models::SessionUser, responses::markup::AppResponse};
 use axum::{
-    extract::{Request, State},
+    extract::Request,
     middleware::Next,
     response::{IntoResponse, Redirect},
 };
 use tower_sessions::Session;
 
 use super::{requests::AuthRequest, service::AuthService};
-use crate::AppState;
 
-pub async fn sign_up(State(state): State<AppState>, req: AuthRequest) -> AppResponse {
-    let service = AuthService::new(state);
+pub async fn sign_up(req: AuthRequest) -> AppResponse {
+    let service = AuthService::new(req.state);
     let new_user = service.sign_up(req.body).await?;
 
     req.session.cycle_id().await?;
@@ -19,8 +18,8 @@ pub async fn sign_up(State(state): State<AppState>, req: AuthRequest) -> AppResp
     Ok(Redirect::to("/").into_response())
 }
 
-pub async fn sign_in(State(state): State<AppState>, req: AuthRequest) -> AppResponse {
-    let service = AuthService::new(state);
+pub async fn sign_in(req: AuthRequest) -> AppResponse {
+    let service = AuthService::new(req.state);
     let session_user = service.sign_in(req.body).await?;
 
     req.session.cycle_id().await?;

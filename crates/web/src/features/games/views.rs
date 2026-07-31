@@ -16,7 +16,7 @@ pub fn index(props: Props) -> Rendered<String> {
             <input type="hidden" name="openid.claimed_id" value="http://specs.openid.net/auth/2.0/identifier_select">
             <input type="hidden" name="openid.ns" value="http://specs.openid.net/auth/2.0">
             <input type="hidden" name="openid.mode" value="checkid_setup">
-            <input type="hidden" name="openid.return_to" value="https://congenial-capybara-p99xwrqg55gf7wq4-3000.app.github.dev/steam-login">
+            <input type="hidden" name="openid.return_to" value="http://localhost:3000/steam-login">
             <button type="submit" class="block btn btn-primary btn-md w-fit mx-auto">
                 "Sign in through"
                 <span class="icon-[mdi--steam] size-8! ml-2"></span>

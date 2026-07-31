@@ -4,10 +4,13 @@ use app_core::{features::auth::models::SessionUser, responses::markup::AppError,
 use axum::{
     extract::{FromRequestParts, Query},
     http::request::Parts,
-    Extension,
+    RequestPartsExt,
 };
+use tower_sessions::Session;
 
 pub struct SteamLoginRequest {
+    pub state: AppState,
+    pub session: Session,
     pub params: HashMap<String, String>,
     pub user: SessionUser,
 }
@@ -19,12 +22,46 @@ impl FromRequestParts<AppState> for SteamLoginRequest {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let Query(params) = Query::<HashMap<String, String>>::from_request_parts(parts, state)
+        let Query(params) = parts
+            .extract()
             .await
             .map_err(|_| AppError::BadRequest("Invalid query parameters"))?;
 
-        let Extension(user) = Extension::<SessionUser>::from_request_parts(parts, state).await?;
+        let session = parts
+            .extract::<Session>()
+            .await
+            .map_err(|(_, msg)| AppError::InternalServerError(anyhow::anyhow!(msg)))?;
 
-        Ok(Self { params, user })
+        let user = parts.extensions.remove::<SessionUser>().ok_or_else(|| {
+            AppError::InternalServerError(anyhow::anyhow!("SessionUser extension missing"))
+        })?;
+
+        Ok(Self {
+            state: state.clone(),
+            session,
+            params,
+            user,
+        })
+    }
+}
+
+pub struct SteamLoginPageRequest {
+    pub uri: String,
+    pub user: SessionUser,
+}
+
+impl FromRequestParts<AppState> for SteamLoginPageRequest {
+    type Rejection = AppError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        _state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let uri = parts.uri.to_string();
+        let user = parts.extensions.remove::<SessionUser>().ok_or_else(|| {
+            AppError::InternalServerError(anyhow::anyhow!("SessionUser extension missing"))
+        })?;
+
+        Ok(Self { uri, user })
     }
 }
