@@ -22,6 +22,9 @@ pub mod features {
     pub mod file_system {
         pub mod handlers;
         pub mod models;
+        pub mod repositories;
+        pub mod requests;
+        pub mod services;
     }
     pub mod notes {
         pub mod handlers;

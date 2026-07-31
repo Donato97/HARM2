@@ -98,4 +98,29 @@ impl AppState {
 
         Ok(())
     }
+
+    pub async fn exe_transaction<S>(&self, stmt: [S]) -> Result<(), sqlx::Error>
+    where
+        S: QueryStatementBuilder,
+    {
+        let (query, values) = self.build(stmt);
+        match &self.pool {
+            CustomPool::Sqlite(pool) => {
+                let mut transaction = pool.begin().await?;
+                sqlx::query_with(&query, values)
+                    .execute(&mut *transaction)
+                    .await?;
+                transaction.commit().await?;
+            }
+            CustomPool::Mysql(pool) => {
+                let mut transaction = pool.begin().await?;
+                sqlx::query_with(&query, values)
+                    .execute(&mut *transaction)
+                    .await?;
+                transaction.commit().await?;
+            }
+        };
+
+        Ok(())
+    }
 }
