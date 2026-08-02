@@ -1,4 +1,8 @@
-use app_core::{features::auth::models::SessionUser, responses::markup::AppResponse};
+use super::service::AuthService;
+use crate::request::RequestSession;
+use app_core::{
+    features::auth::models::SessionUser, request::RequestContext, responses::markup::AppResponse,
+};
 use axum::{
     extract::Request,
     middleware::Next,
@@ -6,30 +10,42 @@ use axum::{
 };
 use tower_sessions::Session;
 
-use super::{requests::AuthRequest, service::AuthService};
+#[derive(serde::Deserialize)]
+pub struct AuthBody {
+    pub email: String,
+    pub password: String,
+}
 
-pub async fn sign_up(req: AuthRequest) -> AppResponse {
-    let service = AuthService::new(req.state);
-    let new_user = service.sign_up(req.body).await?;
+pub async fn sign_up(mut req: Request) -> AppResponse {
+    let state = req.state()?;
+    let session = req.session()?;
+    let body: AuthBody = req.form().await?;
 
-    req.session.cycle_id().await?;
-    req.session.insert("user", new_user).await?;
+    let service = AuthService::new(state);
+    let new_user = service.sign_up(body).await?;
+
+    session.cycle_id().await?;
+    session.insert("user", new_user).await?;
 
     Ok(Redirect::to("/").into_response())
 }
 
-pub async fn sign_in(req: AuthRequest) -> AppResponse {
-    let service = AuthService::new(req.state);
-    let session_user = service.sign_in(req.body).await?;
+pub async fn sign_in(mut req: Request) -> AppResponse {
+    let state = req.state()?;
+    let session = req.session()?;
+    let body: AuthBody = req.form().await?;
 
-    req.session.cycle_id().await?;
-    req.session.insert("user", session_user).await?;
+    let service = AuthService::new(state);
+    let session_user = service.sign_in(body).await?;
+
+    session.cycle_id().await?;
+    session.insert("user", session_user).await?;
 
     Ok(Redirect::to("/").into_response())
 }
 
-pub async fn sign_out(session: Session) -> AppResponse {
-    session.flush().await?;
+pub async fn sign_out(req: Request) -> AppResponse {
+    req.session()?.flush().await?;
 
     Ok(Redirect::to("/sign-in").into_response())
 }

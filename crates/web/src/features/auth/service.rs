@@ -1,14 +1,14 @@
 use app_core::{
     features::auth::{models::SessionUser, repositories::UserRepository},
     responses::markup::AppError,
-    AppState,
+    state::AppState,
 };
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
 
-use crate::features::auth::requests::AuthBody;
+use crate::features::auth::handlers::AuthBody;
 
 pub struct AuthService {
     user_repo: UserRepository,

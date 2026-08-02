@@ -1,7 +1,7 @@
 use axum::response::IntoResponse;
 use hypertext::prelude::*;
 
-use crate::{helper::AppResponse, layouts};
+use crate::{layouts, responses::markup::AppResponse};
 
 pub async fn index() -> AppResponse {
     let markup = rsx! {

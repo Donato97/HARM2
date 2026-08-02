@@ -1,14 +1,12 @@
-use axum::{
-    extract::{Path, State},
-    response::IntoResponse,
-    Extension, Json,
-};
-use sea_query::{Expr, OnConflict, Query};
+use axum::{extract::Request, response::IntoResponse, Json};
 
 use crate::{
-    features::{auth::models::SessionUser, file_system::models::Nodes},
-    helper::{api_errors::server_error, ApiResponse},
-    AppState,
+    features::file_system::{
+        models::{NewNode, NodeType},
+        services::FileSystemService,
+    },
+    request::RequestContext,
+    responses::api::ApiResponse,
 };
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -16,7 +14,7 @@ pub struct CreateBody {
     pub id: String,
     pub parent_id: Option<String>,
     pub name: String,
-    pub type_: String,
+    pub type_: NodeType,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -24,95 +22,53 @@ pub struct UpdateBody {
     pub name: String,
 }
 
-pub async fn index(
-    Extension(user): Extension<SessionUser>,
-    State(state): State<AppState>,
-) -> ApiResponse {
-    let query = Query::select()
-        .columns([
-            "id",
-            "parent_id",
-            "name",
-            "type",
-            "created_at",
-            "updated_at",
-        ])
-        .from("nodes")
-        .and_where(Expr::col("user_id").eq(user.id))
-        .to_owned();
+pub async fn index(mut req: Request) -> ApiResponse {
+    let state = req.state()?;
+    let user = req.user()?;
 
-    let nodes: Nodes = state.exe_select(query).await.map_err(server_error)?;
+    let service = FileSystemService::new(state);
+    let nodes = service.all(user.id).await?;
 
     Ok(Json(nodes).into_response())
 }
 
-pub async fn create_or_update(
-    Extension(user): Extension<SessionUser>,
-    State(state): State<AppState>,
-    Json(body): Json<CreateBody>,
-) -> ApiResponse {
-    let body_clone = body.clone();
-    let query = Query::insert()
-        .into_table("nodes")
-        .columns(["id", "user_id", "parent_id", "name", "type"])
-        .values_panic([
-            body.id.into(),
-            user.id.into(),
-            body.parent_id.into(),
-            body.name.into(),
-            body.type_.into(),
-        ])
-        .on_conflict(OnConflict::column("id").update_columns(["name"]).to_owned())
-        .to_owned();
+pub async fn create(mut req: Request) -> ApiResponse {
+    let user = req.user()?;
+    let state = req.state()?;
+    let body: CreateBody = req.body().await?;
 
-    state.exe_insert(query).await.map_err(server_error)?;
-
-    if body_clone.type_ == "file" {
-        let content_query = Query::insert()
-            .into_table("notes")
-            .columns(["id", "user_id", "content"])
-            .values_panic([body_clone.id.into(), user.id.into(), "".into()])
-            .to_owned();
-
-        state
-            .exe_insert(content_query)
-            .await
-            .map_err(server_error)?;
-    }
+    let new_node = NewNode {
+        id: body.id,
+        user_id: user.id,
+        parent_id: body.parent_id,
+        name: body.name,
+        type_: body.type_,
+    };
+    let service = FileSystemService::new(state);
+    service.create(new_node).await?;
 
     Ok(Json(()).into_response())
 }
 
-pub async fn update(
-    Path(id): Path<String>,
-    Extension(user): Extension<SessionUser>,
-    State(state): State<AppState>,
-    Json(body): Json<UpdateBody>,
-) -> ApiResponse {
-    let query = Query::update()
-        .table("nodes")
-        .values([("name", body.name.into())])
-        .and_where(Expr::col("id").eq(id.clone()))
-        .and_where(Expr::col("user_id").eq(user.id))
-        .to_owned();
+pub async fn update(mut req: Request) -> ApiResponse {
+    let node_id: String = req.path().await?;
+    let state = req.state()?;
+    let user = req.user()?;
+    let body: UpdateBody = req.body().await?;
 
-    state.exe_update(query).await.map_err(server_error)?;
+    let service = FileSystemService::new(state);
+    service.update_node(&node_id, &body.name, user.id).await?;
 
     Ok(Json(()).into_response())
 }
 
-pub async fn delete(
-    Path(id): Path<String>,
-    Extension(user): Extension<SessionUser>,
-    State(state): State<AppState>,
-) -> ApiResponse {
-    let query = Query::delete()
-        .from_table("nodes")
-        .and_where(Expr::col("id").eq(id))
-        .and_where(Expr::col("user_id").eq(user.id))
-        .to_owned();
+pub async fn delete(mut req: Request) -> ApiResponse {
+    let node_id: String = req.path().await?;
+    let state = req.state()?;
+    let user = req.user()?;
 
-    state.exe_delete(query).await.map_err(server_error)?;
+    let service = FileSystemService::new(state);
+    service.delete_node(&node_id, user.id).await?;
 
     Ok(Json(()).into_response())
 }

@@ -3,7 +3,8 @@
     "allow": [
       "WebSearch",
       "Read(//c/Users/Donato Bitetto/dev_kb/**)",
-      "Bash(ls solutions/)"
+      "Bash(ls solutions/)",
+      "WebFetch(domain:claude.ai)"
     ]
   }
 }

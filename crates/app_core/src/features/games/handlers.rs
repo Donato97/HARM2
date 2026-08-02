@@ -1,6 +1,6 @@
 use axum::{extract::OriginalUri, response::IntoResponse};
 
-use crate::{features::games::views, helper::AppResponse};
+use crate::{features::games::views, responses::markup::AppResponse};
 
 pub async fn index(OriginalUri(uri): OriginalUri) -> AppResponse {
     let view_props = views::Props {

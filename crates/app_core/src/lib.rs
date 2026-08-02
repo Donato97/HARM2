@@ -1,4 +1,5 @@
 pub mod helper;
+pub mod request;
 pub mod responses;
 pub mod state;
 pub mod features {
@@ -23,7 +24,6 @@ pub mod features {
         pub mod handlers;
         pub mod models;
         pub mod repositories;
-        pub mod requests;
         pub mod services;
     }
     pub mod notes {
@@ -45,11 +45,11 @@ use axum::{
     Router,
 };
 
-pub use state::{AppState, CustomPool};
+pub use state::CustomPool;
 
 use crate::features::{auth, file_system, generic, movies, notes};
 
-pub fn router() -> Router<AppState> {
+pub fn router() -> Router {
     let notes_router = Router::new()
         .route("/api/files/{id}", put(notes::handlers::update))
         .layer(DefaultBodyLimit::max(10 * 1024 * 1024)); // 10 MB
@@ -60,10 +60,7 @@ pub fn router() -> Router<AppState> {
         .route("/sign-up", get(auth::handlers::sign_up))
         .route("/sign-in", get(auth::handlers::sign_in))
         .route("/api/filesystem", get(file_system::handlers::index))
-        .route(
-            "/api/filesystem",
-            post(file_system::handlers::create_or_update),
-        )
+        .route("/api/filesystem", post(file_system::handlers::create))
         .route("/api/filesystem/{id}", put(file_system::handlers::update))
         .route(
             "/api/filesystem/{id}",

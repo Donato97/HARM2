@@ -1,7 +1,7 @@
 use sea_query::{Expr, Query};
 
 use super::models::User;
-use crate::AppState;
+use crate::state::AppState;
 
 pub struct UserRepository {
     state: AppState,

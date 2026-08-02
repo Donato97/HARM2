@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 use app_core::{
-    features::auth::repositories::UserRepository, responses::markup::AppError, AppState,
+    features::auth::repositories::UserRepository, responses::markup::AppError, state::AppState,
 };
 use reqwest::Client;
 

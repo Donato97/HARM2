@@ -1,28 +1,25 @@
-use std::str::FromStr;
-
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
-use time::Duration;
-
-use app_core::{AppState, CustomPool};
+use crate::features::{auth, games, storage};
+use app_core::{state::AppState, CustomPool};
 use axum::{
     middleware,
     routing::{get, post},
+    Extension,
 };
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use std::str::FromStr;
+use time::Duration;
 use tower_http::services::ServeDir;
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::SqliteStore;
 
-use crate::features::{auth, games, storage};
-
+pub mod request;
 pub mod features {
     pub mod auth {
         pub mod handlers;
-        pub mod requests;
         pub mod service;
     }
     pub mod games {
         pub mod handlers;
-        pub mod requests;
         pub mod services;
         pub mod views;
     }
@@ -60,6 +57,11 @@ async fn main() {
         .build()
         .expect("Creazione del client reqwest fallita!");
 
+    let state = AppState {
+        pool: CustomPool::Sqlite(pool),
+        http_client: client,
+    };
+
     let routes = app_core::router()
         .route("/sign-up", post(auth::handlers::sign_up))
         .route("/sign-in", post(auth::handlers::sign_in))
@@ -67,14 +69,14 @@ async fn main() {
         .route("/games", get(games::handlers::index))
         .route("/steam-login", get(games::handlers::steam_login))
         .route("/storage/upload", post(storage::handlers::upload))
-        .nest_service("/storage", ServeDir::new("storage"))
+        .route(
+            "/storage/{user_id}/{file_name}",
+            get(storage::handlers::read),
+        )
         .layer(middleware::from_fn(auth::handlers::middleware))
         .layer(session_layer)
         .nest_service("/assets", ServeDir::new("dist/assets"))
-        .with_state(AppState {
-            pool: CustomPool::Sqlite(pool),
-            http_client: client,
-        });
+        .layer(Extension(state));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Server in ascolto su http://localhost:3000");

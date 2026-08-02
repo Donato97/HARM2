@@ -15,7 +15,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    fn build<S: QueryStatementBuilder>(&self, stmt: S) -> (String, SqlxValues) {
+    pub fn build<S: QueryStatementBuilder>(&self, stmt: S) -> (String, SqlxValues) {
         let builder: &dyn QueryBuilder = match &self.pool {
             CustomPool::Sqlite(_) => &SqliteQueryBuilder,
             CustomPool::Mysql(_) => &MysqlQueryBuilder,
@@ -99,24 +99,27 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn exe_transaction<S>(&self, stmt: [S]) -> Result<(), sqlx::Error>
-    where
-        S: QueryStatementBuilder,
-    {
-        let (query, values) = self.build(stmt);
+    pub async fn exe_transaction(
+        &self,
+        stmts: Vec<(String, SqlxValues)>,
+    ) -> Result<(), sqlx::Error> {
         match &self.pool {
             CustomPool::Sqlite(pool) => {
                 let mut transaction = pool.begin().await?;
-                sqlx::query_with(&query, values)
-                    .execute(&mut *transaction)
-                    .await?;
+                for (query, values) in stmts {
+                    sqlx::query_with(&query, values)
+                        .execute(&mut *transaction)
+                        .await?;
+                }
                 transaction.commit().await?;
             }
             CustomPool::Mysql(pool) => {
                 let mut transaction = pool.begin().await?;
-                sqlx::query_with(&query, values)
-                    .execute(&mut *transaction)
-                    .await?;
+                for (query, values) in stmts {
+                    sqlx::query_with(&query, values)
+                        .execute(&mut *transaction)
+                        .await?;
+                }
                 transaction.commit().await?;
             }
         };
