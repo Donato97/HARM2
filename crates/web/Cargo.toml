@@ -25,5 +25,8 @@ uuid = { workspace = true }
 infer = { workspace = true }
 anyhow = { workspace = true }
 
-
 argon2 = { version = "0.5.3", features = ["std"] }
+dotenvy = "0.15.7"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }

@@ -1,7 +1,9 @@
-use app_core::responses::api::ApiError;
+use std::sync::OnceLock;
+
+use app_core::responses::Error;
 use axum::body::Bytes;
 
-pub async fn save(path: &str, data: Bytes) -> Result<String, ApiError> {
+pub async fn save(path: &str, data: Bytes) -> Result<String, Error> {
     let ext = detect_extension(&data)?;
 
     let filename = format!("{}.{}", uuid::Uuid::new_v4(), ext);
@@ -13,13 +15,18 @@ pub async fn save(path: &str, data: Bytes) -> Result<String, ApiError> {
 
     tokio::fs::write(&path, data).await?;
 
-    Ok(path.to_string_lossy().into_owned())
+    Ok(filename)
 }
 
-fn detect_extension(data: &Bytes) -> Result<&str, ApiError> {
-    let kind = infer::get(data).ok_or(ApiError::BadRequest("Mime type not supported"))?;
-    let ext =
-        ext_from_mime(kind.mime_type()).ok_or(ApiError::BadRequest("Mime type not supported"))?;
+pub fn storage_root() -> &'static str {
+    static ROOT: OnceLock<String> = OnceLock::new();
+    ROOT.get_or_init(|| std::env::var("STORAGE_ROOT").expect("STORAGE_ROOT non impostata"))
+}
+
+fn detect_extension(data: &Bytes) -> Result<&str, Error> {
+    let kind = infer::get(data).ok_or(Error::BadRequest("Mime type not supported".into()))?;
+    let ext = ext_from_mime(kind.mime_type())
+        .ok_or(Error::BadRequest("Mime type not supported".into()))?;
 
     Ok(ext)
 }

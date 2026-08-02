@@ -3,7 +3,7 @@ use app_core::{state::AppState, CustomPool};
 use axum::{
     middleware,
     routing::{get, post},
-    Extension,
+    Extension, Router,
 };
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::str::FromStr;
@@ -11,6 +11,9 @@ use time::Duration;
 use tower_http::services::ServeDir;
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::SqliteStore;
+
+#[cfg(test)]
+mod tests;
 
 pub mod request;
 pub mod features {
@@ -31,6 +34,8 @@ pub mod features {
 
 #[tokio::main]
 async fn main() {
+    dotenvy::dotenv().ok();
+
     // In dev usa SQLite; in prod sostituisci con MySqlPool::connect(...).
     let opts = SqliteConnectOptions::from_str("sqlite://crates/web/db.sqlite")
         .expect("Errore nella configurazione del DB!")
@@ -62,7 +67,15 @@ async fn main() {
         http_client: client,
     };
 
-    let routes = app_core::router()
+    let routes = router(state, session_layer);
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    println!("Server in ascolto su http://localhost:3000");
+    axum::serve(listener, routes).await.unwrap();
+}
+
+fn router(state: AppState, session_layer: SessionManagerLayer<SqliteStore>) -> Router {
+    app_core::router()
         .route("/sign-up", post(auth::handlers::sign_up))
         .route("/sign-in", post(auth::handlers::sign_in))
         .route("/sign-out", post(auth::handlers::sign_out))
@@ -76,9 +89,5 @@ async fn main() {
         .layer(middleware::from_fn(auth::handlers::middleware))
         .layer(session_layer)
         .nest_service("/assets", ServeDir::new("dist/assets"))
-        .layer(Extension(state));
-
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("Server in ascolto su http://localhost:3000");
-    axum::serve(listener, routes).await.unwrap();
+        .layer(Extension(state))
 }

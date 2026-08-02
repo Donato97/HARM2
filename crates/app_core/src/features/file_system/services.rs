@@ -2,7 +2,7 @@ use super::{
     models::{NewFile, NewNode, NodeType, Nodes},
     repositories::FileSystemRepository,
 };
-use crate::{responses::api::ApiError, state::AppState};
+use crate::{responses::Error, state::AppState};
 
 pub struct FileSystemService {
     file_system_repo: FileSystemRepository,
@@ -18,7 +18,7 @@ impl FileSystemService {
         self.file_system_repo.all(user_id).await
     }
 
-    pub async fn create(&self, node: NewNode) -> Result<(), ApiError> {
+    pub async fn create(&self, node: NewNode) -> Result<(), Error> {
         match node.type_ {
             NodeType::Folder => {
                 self.file_system_repo.create_node(node).await?;
@@ -42,14 +42,14 @@ impl FileSystemService {
         node_id: &str,
         new_name: &str,
         user_id: u64,
-    ) -> Result<(), ApiError> {
+    ) -> Result<(), Error> {
         self.file_system_repo
             .update(node_id, new_name, user_id)
             .await?;
         Ok(())
     }
 
-    pub async fn delete_node(&self, node_id: &str, user_id: u64) -> Result<(), ApiError> {
+    pub async fn delete_node(&self, node_id: &str, user_id: u64) -> Result<(), Error> {
         self.file_system_repo.delete(node_id, user_id).await?;
         Ok(())
     }

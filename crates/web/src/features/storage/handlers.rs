@@ -1,40 +1,40 @@
+use crate::features::storage::services::storage_root;
+
 use super::services::save;
 use app_core::{
     features::auth::models::SessionUser,
     request::RequestContext,
-    responses::api::{ApiError, ApiResponse},
+    responses::{api::ApiResponse, Error},
 };
 use axum::{
     extract::{Multipart, Request},
     http::header,
-    response::{IntoResponse, Response},
+    response::IntoResponse,
     Extension, Json,
 };
 
-pub async fn read(mut req: Request) -> Result<Response, ApiError> {
+pub async fn read(mut req: Request) -> ApiResponse {
     let (user_path, file_name): (u64, String) = req.path().await?;
     let user = req.user()?;
     if user_path != user.id {
-        return Err(ApiError::BadRequest("Not authorized"));
+        return Err(Error::NotFound.into());
     }
 
-    let base = tokio::fs::canonicalize(format!("storage/{user_path}"))
+    let storage_root = storage_root();
+    let base = tokio::fs::canonicalize(format!("{storage_root}/{user_path}"))
         .await
-        .map_err(|_| ApiError::NotFound)?;
-    let target = tokio::fs::canonicalize(format!("storage/{user_path}/{file_name}"))
+        .map_err(|_| Error::NotFound)?;
+    let target = tokio::fs::canonicalize(format!("{storage_root}/{user_path}/{file_name}"))
         .await
-        .map_err(|_| ApiError::NotFound)?;
+        .map_err(|_| Error::NotFound)?;
 
     if !target.starts_with(&base) {
-        return Err(ApiError::NotFound);
+        return Err(Error::NotFound.into());
     }
-
-    let data = tokio::fs::read(target)
-        .await
-        .map_err(|_| ApiError::NotFound)?;
+    let data = tokio::fs::read(target).await.map_err(|_| Error::NotFound)?;
     let mime = infer::get(&data)
         .map(|kind| kind.mime_type())
-        .ok_or(ApiError::NotFound)?;
+        .ok_or(Error::NotFound)?;
 
     let headers = [
         (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
@@ -46,7 +46,8 @@ pub async fn read(mut req: Request) -> Result<Response, ApiError> {
 }
 
 pub async fn upload(Extension(user): Extension<SessionUser>, mut files: Multipart) -> ApiResponse {
-    let path = format!("storage/{}", user.id);
+    let storage_root = storage_root();
+    let path = format!("{}/{}", storage_root, user.id);
 
     while let Some(file) = files.next_field().await? {
         if file.name() != Some("file") {
@@ -54,10 +55,10 @@ pub async fn upload(Extension(user): Extension<SessionUser>, mut files: Multipar
         }
 
         let data = file.bytes().await?;
-        let path = save(&path, data).await?;
+        let filename = save(&path, data).await?;
 
         let response_json = serde_json::json!({
-            "url": format!("/{path}")
+            "url": format!("/storage/{}/{}", user.id, filename)
         });
         return Ok(Json(response_json).into_response());
     }

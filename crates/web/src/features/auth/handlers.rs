@@ -1,5 +1,6 @@
 use super::service::AuthService;
 use crate::request::RequestSession;
+use anyhow::Context;
 use app_core::{
     features::auth::models::SessionUser, request::RequestContext, responses::markup::AppResponse,
 };
@@ -24,8 +25,14 @@ pub async fn sign_up(mut req: Request) -> AppResponse {
     let service = AuthService::new(state);
     let new_user = service.sign_up(body).await?;
 
-    session.cycle_id().await?;
-    session.insert("user", new_user).await?;
+    session
+        .cycle_id()
+        .await
+        .context("Error to cycle session id")?;
+    session
+        .insert("user", new_user)
+        .await
+        .context("Error to update session")?;
 
     Ok(Redirect::to("/").into_response())
 }
@@ -38,20 +45,32 @@ pub async fn sign_in(mut req: Request) -> AppResponse {
     let service = AuthService::new(state);
     let session_user = service.sign_in(body).await?;
 
-    session.cycle_id().await?;
-    session.insert("user", session_user).await?;
+    session
+        .cycle_id()
+        .await
+        .context("Error to cycle session id")?;
+    session
+        .insert("user", session_user)
+        .await
+        .context("Error to update session")?;
 
     Ok(Redirect::to("/").into_response())
 }
 
 pub async fn sign_out(req: Request) -> AppResponse {
-    req.session()?.flush().await?;
+    req.session()?
+        .flush()
+        .await
+        .context("Error to delete session")?;
 
     Ok(Redirect::to("/sign-in").into_response())
 }
 
 pub async fn middleware(session: Session, mut req: Request, next: Next) -> AppResponse {
-    let session_user = session.get::<SessionUser>("user").await?;
+    let session_user = session
+        .get::<SessionUser>("user")
+        .await
+        .context("Error to read user from session")?;
 
     let path = req.uri().path();
 

@@ -1,6 +1,7 @@
+use anyhow::Context;
 use app_core::{
     features::auth::{models::SessionUser, repositories::UserRepository},
-    responses::markup::AppError,
+    responses::Error,
     state::AppState,
 };
 use argon2::{
@@ -20,8 +21,8 @@ impl AuthService {
         Self { user_repo }
     }
 
-    pub async fn sign_up(&self, body: AuthBody) -> Result<SessionUser, AppError> {
-        let hash = self.hash_password(&body.password)?;
+    pub async fn sign_up(&self, body: AuthBody) -> Result<SessionUser, Error> {
+        let hash = self.hash_password(body.password).await?;
 
         let id = self
             .user_repo
@@ -30,10 +31,10 @@ impl AuthService {
             .map_err(|e| {
                 if let Some(db_err) = e.as_database_error() {
                     if db_err.is_unique_violation() {
-                        return AppError::BadRequest("Email already exists");
+                        return Error::BadRequest("Email already exists".into());
                     }
                 }
-                AppError::InternalServerError(e.into())
+                Error::Internal(e.into())
             })?;
 
         let session_user = SessionUser {
@@ -45,14 +46,14 @@ impl AuthService {
         Ok(session_user)
     }
 
-    pub async fn sign_in(&self, body: AuthBody) -> Result<SessionUser, AppError> {
+    pub async fn sign_in(&self, body: AuthBody) -> Result<SessionUser, Error> {
         let user = self
             .user_repo
             .find_by_email(&body.email)
             .await?
-            .ok_or(AppError::BadRequest("Invalid credentials"))?;
+            .ok_or(Error::BadRequest("Invalid credentials".into()))?;
 
-        self.verify_password(&body.password, &user.password)?;
+        self.verify_password(body.password, user.password).await?;
 
         Ok(SessionUser {
             id: user.id,
@@ -61,21 +62,28 @@ impl AuthService {
         })
     }
 
-    fn hash_password(&self, password: &str) -> Result<String, AppError> {
-        let salt = SaltString::generate(&mut OsRng);
-        let hash = Argon2::default()
-            .hash_password(password.as_bytes(), &salt)?
-            .to_string();
+    async fn hash_password(&self, password: String) -> Result<String, anyhow::Error> {
+        let hash = tokio::task::spawn_blocking(move || {
+            let salt = SaltString::generate(&mut OsRng);
+            Argon2::default()
+                .hash_password(password.as_bytes(), &salt)
+                .map(|h| h.to_string())
+        })
+        .await??;
 
         Ok(hash)
     }
 
-    fn verify_password(&self, password: &str, stored_hash: &str) -> Result<(), AppError> {
-        let password_hash = PasswordHash::new(stored_hash)?;
+    async fn verify_password(&self, password: String, stored_hash: String) -> Result<(), Error> {
+        let result = tokio::task::spawn_blocking(move || {
+            let password_hash = PasswordHash::new(&stored_hash)?;
 
-        Argon2::default()
-            .verify_password(password.as_bytes(), &password_hash)
-            .map_err(|_| AppError::BadRequest("Invalid credentials"))?;
+            Argon2::default().verify_password(password.as_bytes(), &password_hash)
+        })
+        .await
+        .context("Verify password task paniced")?;
+
+        result.map_err(|_| Error::BadRequest("Invalid credential".into()))?;
 
         Ok(())
     }

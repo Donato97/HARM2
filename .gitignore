@@ -8,3 +8,5 @@ desktop/gen
 
 crates/web/db.sqlite-shm
 crates/web/db.sqlite-wal
+
+.env

@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
-use app_core::{
-    features::auth::repositories::UserRepository, responses::markup::AppError, state::AppState,
-};
+use app_core::{features::auth::repositories::UserRepository, responses::Error, state::AppState};
 use reqwest::Client;
 
 type Params = HashMap<String, String>;
@@ -21,7 +19,7 @@ impl SteamService {
         }
     }
 
-    pub async fn login(&self, user_id: u64, params: Params) -> Result<String, AppError> {
+    pub async fn login(&self, user_id: u64, params: Params) -> Result<String, Error> {
         let steam_id = self.validate_open_id(params).await?;
 
         self.user_repo
@@ -31,9 +29,9 @@ impl SteamService {
         Ok(steam_id)
     }
 
-    async fn validate_open_id(&self, mut params: Params) -> Result<String, AppError> {
+    async fn validate_open_id(&self, mut params: Params) -> Result<String, Error> {
         if params.get("openid.mode").is_none_or(|s| s != "id_res") {
-            return Err(AppError::BadRequest("Invalid openid.mode"));
+            return Err(Error::BadRequest("Invalid openid.mode".into()));
         }
 
         params.insert("openid.mode".into(), "check_authentication".into());
@@ -50,12 +48,12 @@ impl SteamService {
             .context("Failed to parse response")?;
 
         if !body.contains("is_valid:true") {
-            return Err(AppError::BadRequest("Invalid openid"));
+            return Err(Error::BadRequest("Invalid openid".into()));
         }
 
         let steam_id = params
             .get("openid.claimed_id")
-            .ok_or(AppError::BadRequest("Missing openid.claimed_id"))?
+            .ok_or(Error::BadRequest("Missing openid.claimed_id".into()))?
             .split('/')
             .next_back()
             .context("Steam id missing from openid.claimed_id")?;

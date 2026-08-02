@@ -3,3 +3,5 @@
 web = ["watch", "-w", "crates/web", "-w", "crates/app_core", "-i", "db.sqlite*", "-x", "run -p web"]
 # Lancia la versione desktop (app Tauri v2)
 desktop = ["watch", "-w", "crates/desktop", "-w", "crates/app_core", "-x", "run -p desktop"]
+
+test-web = ["test", "-p", "web", "--", "--show-output"]

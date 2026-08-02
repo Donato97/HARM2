@@ -1,5 +1,6 @@
 use super::{services::SteamService, views};
 use crate::request::RequestSession;
+use anyhow::Context;
 use app_core::{request::RequestContext, responses::markup::AppResponse};
 use axum::{
     extract::Request,
@@ -24,7 +25,10 @@ pub async fn steam_login(mut req: Request) -> AppResponse {
     let steam_id = steam_service.login(user.id, params).await?;
 
     user.steam_id = Some(steam_id);
-    session.insert("user", user).await?;
+    session
+        .insert("user", user)
+        .await
+        .context("Failed to update user session")?;
 
     Ok(Redirect::to("/games").into_response())
 }
