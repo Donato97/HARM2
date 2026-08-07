@@ -51,6 +51,7 @@ export function NodesClient() {
                 folders,
             };
         }
+
         function _groupData() {
             const map = new Map<string, RawNode[]>();
             for (const node of data) {

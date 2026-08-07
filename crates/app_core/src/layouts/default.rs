@@ -49,7 +49,8 @@ pub fn default<S: Renderable>(props: Props<S>) -> Rendered<String> {
                 <title>"HARM2"</title>
 
                 (load_manifest_entry("frontend/style.css"))
-                (load_manifest_entry("frontend/htmx.ts"))
+                /* (load_manifest_entry("frontend/htmx.ts")) */
+                (load_manifest_entry("frontend/main.ts"))
             </head>
             <body>
                 <div class="flex flex-col md:flex-row h-screen">

@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
                     editor: "frontend/editor.tsx",
                     htmx: "frontend/htmx.ts",
                     css: "frontend/style.css",
+                    main: "frontend/main.ts"
                 },
             },
         },

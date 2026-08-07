@@ -6,9 +6,58 @@
     themes: luxury --default;
 }
 
+@import "tailwindcss";
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+    name: "tui";
+    default: true;
+    color-scheme: dark;
+
+    --color-base-100: #1e1e2e;
+    --color-base-200: #181825;
+    --color-base-300: #313244;
+    --color-base-content: #cdd6f4;
+
+    --color-primary: #89b4fa;
+    --color-primary-content: #1e1e2e;
+    --color-secondary: #cba6f7;
+    --color-secondary-content: #1e1e2e;
+    --color-accent: #89dceb;
+    --color-accent-content: #1e1e2e;
+    --color-neutral: #45475a;
+    --color-neutral-content: #cdd6f4;
+
+    --color-info: #89dceb;
+    --color-success: #a6e3a1;
+    --color-warning: #fab387;
+    --color-error: #f38ba8;
+    --color-info-content: #1e1e2e;
+    --color-success-content: #1e1e2e;
+    --color-warning-content: #1e1e2e;
+    --color-error-content: #1e1e2e;
+
+    --radius-selector: 0;
+    --radius-field: 0;
+    --radius-box: 0;
+    --border: 1px;
+    --depth: 0;
+    --noise: 0;
+}
+
+@layer base {
+    html {
+        font-family:
+            "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+        font-size: 14px;
+    }
+    * {
+        transition: none !important;
+    }
+}
+
 @plugin "daisyui/theme" {
     name: "luxury";
-    default: true;
     prefersdark: false;
     color-scheme: "dark";
     --color-base-100: oklch(14.076% 0.004 285.822);
@@ -45,6 +94,10 @@
     scrollbar-color: unset;
 }
 
+[x-cloak] {
+    display: none !important;
+}
+
 body {
     * {
         &::-webkit-scrollbar {
@@ -78,70 +131,24 @@ nav ul a.menu-active::before {
     @apply bg-primary rounded-r-box;
 }
 
-#editor {
+.tiptap {
+    min-height: 100%;
+
     img {
-        @apply inline;
+        margin: 0;
+        display: inline;
+        vertical-align: text-bottom;
+        border: 1px solid transparent;
     }
 
-    ul {
-        li[role="checkbox"] {
-            @apply list-none;
-        }
-
-        li[role="checkbox"] {
-            &::before {
-                @apply content-[""] inline-block size-3 border border-neutral-content rounded-xs mr-2;
-            }
-
-            &[aria-checked="true"]::before {
-                @apply bg-neutral-content;
-            }
-        }
+    img.ProseMirror-selectednode {
+        border-color: var(--color-accent);
     }
 }
 
-.editor-code {
-    display: block;
-    position: relative;
-    font-family: Menlo, Consolas, Monaco, monospace;
-    font-size: 13px;
-    line-height: 1.53;
-    tab-size: 2;
-    padding: 8px;
-    margin: 8px 0;
-    overflow-x: auto;
-    border: none;
-}
-
-/* colori token */
-.token-comment {
-    color: slategray;
-}
-
-.token-punctuation {
-    color: #999;
-}
-
-.token-property {
-    color: #905;
-}
-
-.token-selector {
-    color: #690;
-}
-
-.token-operator {
-    color: #9a6e3a;
-}
-
-.token-attr {
-    color: #07a;
-}
-
-.token-variable {
-    color: #e90;
-}
-
-.token-function {
-    color: #dd4a68;
+#editor {
+    > * {
+        caret-shape: block;
+        caret-color: var(--color-primary);
+    }
 }

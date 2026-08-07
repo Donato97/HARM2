@@ -4,6 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { EFS } from "./filesystem";
 import FileHandler from "@tiptap/extension-file-handler";
 import Image from "@tiptap/extension-image";
+import { SuggestionMenu } from "./Suggestion";
 
 const save = debounce(({ editor }: EditorEvents["update"]) => {
     const id = EFS.activeNote()?.file.id;
@@ -84,9 +85,18 @@ const FileUploader = FileHandler.configure({
     },
 });
 
-export const editor = new Editor({
-    element: document.querySelector("#editor"),
-    extensions: [StarterKit, Image, FileUploader],
-    content: "<p>Hello World!</p>",
-    onUpdate: save,
-});
+export let editor: Editor;
+
+export function create_editor(editorEl: HTMLElement) {
+    editor = new Editor({
+        element: editorEl,
+        extensions: [
+            StarterKit,
+            Image.configure({ inline: true }),
+            FileUploader,
+            SuggestionMenu,
+        ],
+        content: "<p>Hello World!</p>",
+        onUpdate: save,
+    });
+}

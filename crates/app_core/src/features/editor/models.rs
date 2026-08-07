@@ -3,6 +3,7 @@ use sqlx::prelude::{FromRow, Type};
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize, Type, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[sqlx(rename_all = "lowercase")]
 pub enum NodeType {
     Folder,
     File,
@@ -31,7 +32,7 @@ pub struct NewFile {
     pub content: String,
 }
 
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize, FromRow, Debug)]
 pub struct Node {
     pub id: String,
     pub parent_id: Option<String>,
@@ -45,11 +46,13 @@ pub struct Node {
 
 pub type Nodes = Vec<Node>;
 
+#[derive(Debug)]
 pub struct Tree<'a> {
     pub files: Vec<&'a Node>,
     pub folders: Vec<Subtree<'a>>,
 }
 
+#[derive(Debug)]
 pub struct Subtree<'a> {
     pub node: &'a Node,
     pub files: Vec<&'a Node>,

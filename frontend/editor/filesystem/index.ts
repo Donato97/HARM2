@@ -1,6 +1,6 @@
 import { createMutable } from "solid-js/store";
 import { NodesClient, NotesClient } from "./client";
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 
 export type EditorFile = {
     id: string;
@@ -30,7 +30,23 @@ function EditorFileSystem() {
 
     NodesClient()
         .fetchFileSystem()
-        .then((data) => Object.assign(fileSystem, data));
+        .then((data) => Object.assign(fileSystem, data))
+        .then(openFromUrl);
+
+    window.addEventListener("popstate", openFromUrl);
+
+    function openFromUrl() {
+        const id = new URLSearchParams(location.search).get("note");
+        if (!id) return;
+
+        const path = EFS._buildPath(id);
+        if (!path) return;
+
+        const file = _getFileNode(path);
+        if (!file) return;
+        console.log({ path, file });
+        EFS.setActiveNote({ path, file });
+    }
 
     function openAllFolders(folder: Record<string, EditorFolder>) {
         for (const childFolder of Object.values(folder)) {
@@ -43,6 +59,21 @@ function EditorFileSystem() {
         for (const childFolder of Object.values(folder)) {
             childFolder.open = false;
             closeAllFolders(childFolder.folders);
+        }
+    }
+
+    function _buildPath(
+        id: string,
+        folders: Record<string, EditorFolder> = fileSystem,
+        prefix = "",
+    ): string | undefined {
+        for (const folder of Object.values(folders)) {
+            const path = prefix ? `${prefix}/${folder.id}` : folder.id;
+
+            if (folder.files[id]) return `${path}/${id}`;
+
+            const found = _buildPath(id, folder.folders, path);
+            if (found) return found;
         }
     }
 
@@ -75,8 +106,10 @@ function EditorFileSystem() {
         fileSystem,
         activeNote,
         setActiveNote,
+        openFromUrl,
         openAllFolders,
         closeAllFolders,
+        _buildPath,
         _getRoot,
         _getFolderNode,
         _getFileNode,

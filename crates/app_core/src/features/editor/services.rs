@@ -1,16 +1,14 @@
-use std::ops::Deref;
-
 use super::{
     models::{NewFile, NewNode, Node, NodeType, Nodes, Subtree, Tree},
     repositories::FileSystemRepository,
 };
 use crate::{responses::Error, state::AppState};
 
-pub struct FileSystemService {
+pub struct EditorService {
     file_system_repo: FileSystemRepository,
 }
 
-impl FileSystemService {
+impl EditorService {
     pub fn new(state: AppState) -> Self {
         let file_system_repo = FileSystemRepository::new(state);
         Self { file_system_repo }
@@ -56,7 +54,7 @@ impl FileSystemService {
         Ok(())
     }
 
-    fn build_tree<'a>(&self, nodes: &'a Nodes, parent_id: Option<&str>) -> Tree<'a> {
+    pub fn build_tree<'a>(&self, nodes: &'a Nodes, parent_id: Option<&str>) -> Tree<'a> {
         let (folders, files): (Vec<&Node>, Vec<&Node>) = nodes
             .iter()
             .filter(|n| n.parent_id.as_deref() == parent_id)

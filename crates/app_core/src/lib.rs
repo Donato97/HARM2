@@ -9,6 +9,13 @@ pub mod features {
         pub mod repositories;
         pub mod views;
     }
+    pub mod editor {
+        pub mod handlers;
+        pub mod models;
+        pub mod repositories;
+        pub mod services;
+        pub mod views;
+    }
     pub mod generic {
         pub mod views;
     }
@@ -47,7 +54,7 @@ use axum::{
 
 pub use state::CustomPool;
 
-use crate::features::{auth, file_system, generic, movies, notes};
+use crate::features::{auth, editor, file_system, movies, notes};
 
 pub fn router() -> Router {
     let notes_router = Router::new()
@@ -55,7 +62,7 @@ pub fn router() -> Router {
         .layer(DefaultBodyLimit::max(10 * 1024 * 1024)); // 10 MB
 
     let other_router = Router::new()
-        .route("/", get(generic::views::index))
+        .route("/", get(editor::handlers::index))
         .route("/movies", get(movies::handlers::index))
         .route("/sign-up", get(auth::handlers::sign_up))
         .route("/sign-in", get(auth::handlers::sign_in))

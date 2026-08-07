@@ -1,9 +1,39 @@
-use axum::response::IntoResponse;
-use hypertext::prelude::*;
+use super::models::{Node, Subtree, Tree};
+use crate::layouts;
+use hypertext::{prelude::*, Raw};
 
-use crate::{layouts, responses::markup::AppResponse};
+pub struct Props<'a> {
+    pub tree: Tree<'a>,
+}
 
-pub async fn index() -> AppResponse {
+pub fn index(props: Props<'_>) -> Rendered<String> {
+    fn file_markup(file: &Node) -> Raw<String> {
+        rsx! {
+            <li><span>(file.name)</span></li>
+        }
+        .memoize()
+    }
+
+    fn folder_markup(folder: &Subtree) -> Raw<String> {
+        rsx! {
+            <li x-data="{ open: false }" @open-all.window="open = true" @close-all.window="open = false">
+                <button @click="open = !open">
+                    <span>(folder.node.name)</span>
+                </button>
+
+                <ul x-cloak x-show="open">
+                    @for f in &folder.folders {
+                        (folder_markup(f))
+                    }
+                    @for file in &folder.files {
+                        (file_markup(file))
+                    }
+                </ul>
+            </li>
+        }
+        .memoize()
+    }
+
     let markup = rsx! {
         <main class="drawer md:drawer-open h-full flex">
             <input
@@ -21,7 +51,7 @@ pub async fn index() -> AppResponse {
                 ></label>
 
                 <div class="w-65 bg-base-300 border-r border-base-content/20 h-full">
-                    <div class="flex items-center justify-end p-2 border-b border-base-content/20">
+                    <div class="flex items-center justify-end p-2 border-b border-base-content/20" x-data>
                         <button
                             class="btn btn-xs btn-ghost"
                             /* onclick={() => EFS.folder.createRoot()} */
@@ -30,26 +60,25 @@ pub async fn index() -> AppResponse {
                         </button>
                         <button
                             class="btn btn-xs btn-ghost"
-                            /* onclick={() => EFS.openAllFolders(EFS.fileSystem)} */
+                            @click="$dispatch('open-all')"
                         >
                             <span class="icon-[material-symbols--expand] size-4"></span>
                         </button>
                         <button
                             class="btn btn-xs btn-ghost"
-                            /* onclick={() => EFS.closeAllFolders(EFS.fileSystem)} */
+                            @click="$dispatch('close-all')"
                         >
                             <span class="icon-[material-symbols--compress] size-4"></span>
                         </button>
                     </div>
 
-                    <ul class="menu menu-sm w-full" x-data="fileTree" x-ref="treeMenu">
-                        /* <For each={Object.entries(EFS.fileSystem)}>
-                            {([key, folder]) => (
-                                <li>
-                                    <Folder folder={folder} path={key} />
-                                </li>
-                            )}
-                        </For> */
+                    <ul class="menu menu-sm w-full" x-ref="treeMenu">
+                        @for folder in &props.tree.folders {
+                            (folder_markup(folder))
+                        }
+                        @for file in &props.tree.files {
+                            (file_markup(file))
+                        }
                     </ul>
                 </div>
             </div>
@@ -78,5 +107,5 @@ pub async fn index() -> AppResponse {
         path: "".to_string(),
     };
 
-    Ok(layouts::default(layout_props).into_response())
+    layouts::default(layout_props)
 }
