@@ -9,12 +9,18 @@ pub enum NodeType {
     File,
 }
 
+impl NodeType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            NodeType::Folder => "folder",
+            NodeType::File => "file",
+        }
+    }
+}
+
 impl From<NodeType> for sea_query::Value {
     fn from(value: NodeType) -> Self {
-        match value {
-            NodeType::Folder => "folder".into(),
-            NodeType::File => "file".into(),
-        }
+        value.as_str().into()
     }
 }
 

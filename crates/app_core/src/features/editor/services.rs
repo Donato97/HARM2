@@ -18,6 +18,11 @@ impl EditorService {
         self.file_system_repo.all(user_id).await
     }
 
+    pub async fn find(&self, id: &str, user_id: u64) -> Result<Node, Error> {
+        let nodes = self.file_system_repo.find(id, user_id).await?;
+        nodes.into_iter().next().ok_or(Error::NotFound)
+    }
+
     pub async fn create(&self, node: NewNode) -> Result<(), Error> {
         match node.type_ {
             NodeType::Folder => {
@@ -42,11 +47,12 @@ impl EditorService {
         node_id: &str,
         new_name: &str,
         user_id: u64,
-    ) -> Result<(), Error> {
+    ) -> Result<Node, Error> {
         self.file_system_repo
             .update(node_id, new_name, user_id)
             .await?;
-        Ok(())
+
+        self.find(node_id, user_id).await
     }
 
     pub async fn delete_node(&self, node_id: &str, user_id: u64) -> Result<(), Error> {

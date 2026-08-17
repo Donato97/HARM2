@@ -34,6 +34,26 @@ impl FileSystemRepository {
         Ok(nodes)
     }
 
+    pub async fn find(&self, id: &str, user_id: u64) -> Result<Nodes, sqlx::Error> {
+        let query = Query::select()
+            .columns([
+                "id",
+                "parent_id",
+                "name",
+                "type",
+                "created_at",
+                "updated_at",
+            ])
+            .from("nodes")
+            .and_where(Expr::col("id").eq(id))
+            .and_where(Expr::col("user_id").eq(user_id))
+            .to_owned();
+
+        let nodes: Nodes = self.state.exe_select(query).await?;
+
+        Ok(nodes)
+    }
+
     pub async fn create_node(&self, node: NewNode) -> Result<u64, sqlx::Error> {
         let query = self.get_node_query(node);
         self.state.exe_insert(query).await

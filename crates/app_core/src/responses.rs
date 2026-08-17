@@ -52,7 +52,7 @@ impl From<FormRejection> for Error {
 
 impl From<anyhow::Error> for Error {
     fn from(e: anyhow::Error) -> Self {
-        Error::Internal(e.into())
+        Error::Internal(e)
     }
 }
 

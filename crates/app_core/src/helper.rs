@@ -24,10 +24,11 @@ pub mod vite {
 
         rsx! {
             @if let Some(file) = &file {
-                @if file.ends_with(".css") {
-                    <link rel="stylesheet" href=(file)>
+                @let url = format!("/{file}");
+                @if url.ends_with(".css") {
+                    <link rel="stylesheet" href=(url)>
                 } @else {
-                    <script src=(file) type="module"></script>
+                    <script src=(url) type="module"></script>
                 }
             }
         }

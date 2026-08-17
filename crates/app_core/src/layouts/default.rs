@@ -1,4 +1,4 @@
-use hypertext::prelude::*;
+use hypertext::{prelude::*, Raw};
 
 use crate::helper::vite::load_manifest_entry;
 
@@ -7,8 +7,26 @@ pub struct Props<S: Renderable> {
     pub path: String,
 }
 
+fn mobile_bar_link(current_path: &str, href: &str, text: &str) -> Raw<String> {
+    let current_path = current_path.strip_prefix("/").unwrap_or("");
+    let href_path = href.strip_prefix("/").unwrap_or("");
+
+    let class = if current_path == href_path {
+        "flex-row basis-1/2 gap-2 dock-active text-primary after:content-none"
+    } else {
+        "flex-row basis-1/2 gap-2"
+    };
+
+    rsx! {
+        <a class=(class) href=(href)>
+            <span class="inline-block my-1.5 size-5 icon-[material-symbols--note-stack-outline]"></span>
+            <span class="dock-label">(text)</span>
+        </a>
+    }.memoize()
+}
+
 pub fn default<S: Renderable>(props: Props<S>) -> Rendered<String> {
-    let d_notes = if props.path == "" {
+    let d_notes = if props.path.is_empty() {
         "menu-active text-primary"
     } else {
         ""
@@ -24,89 +42,71 @@ pub fn default<S: Renderable>(props: Props<S>) -> Rendered<String> {
         ""
     };
 
-    let m_notes = if props.path == "" {
-        "basis-1/2 dock-active text-primary"
-    } else {
-        "basis-1/2"
-    };
-    let m_games = if props.path == "/games" {
-        "basis-1/2 dock-active text-primary"
-    } else {
-        "basis-1/2"
-    };
-    let m_movies = if props.path == "/movies" {
-        "basis-1/2 dock-active text-primary"
-    } else {
-        "basis-1/2"
-    };
-
     rsx! {
         <!DOCTYPE html>
-        <html lang="it">
+        <html lang="it" "data-theme"="tui">
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <title>"HARM2"</title>
 
                 (load_manifest_entry("frontend/style.css"))
-                /* (load_manifest_entry("frontend/htmx.ts")) */
                 (load_manifest_entry("frontend/main.ts"))
             </head>
             <body>
-                <div class="flex flex-col md:flex-row h-screen">
-                    <nav id="desktop-nav" class="hidden md:flex flex-col items-center grow-0 shrink-0 bg-base-200 border-r border-stone-800">
+                <div class="flex md:flex-row flex-col h-screen">
+                    <nav id="desktop-nav" class="hidden md:flex flex-col items-center bg-base-200 border-stone-800 border-r grow-0 shrink-0">
                         <div></div>
 
                         <ul "hx-boost:inherited"="true" class="menu">
                             <li>
                                 <a class=(d_notes) href="/">
-                                    <span class="icon-[material-symbols--note-stack-outline] my-1.5 inline-block size-5"></span>
+                                    <span class="inline-block my-1.5 size-5 icon-[material-symbols--note-stack-outline]"></span>
                                 </a>
                             </li>
                             <li>
                                 <a class=(d_games) href="/games">
-                                    <span class="icon-[material-symbols--stadia-controller-outline] my-1.5 inline-block size-5"></span>
+                                    <span class="inline-block my-1.5 size-5 icon-[material-symbols--stadia-controller-outline]"></span>
                                 </a>
                             </li>
                             <li>
                                 <a class=(d_movies) href="/movies">
-                                    <span class="icon-[material-symbols--movie-outline] my-1.5 inline-block size-5"></span>
+                                    <span class="inline-block my-1.5 size-5 icon-[material-symbols--movie-outline]"></span>
                                 </a>
                             </li>
                         </ul>
                     </nav>
 
-                    <div id="content" class="h-full flex-1 min-h-0">
-                        (props.slot)
-                    </div>
+                    <div id="content" class="flex flex-col flex-1 h-full min-h-0">
+                        <div class="flex flex-1 min-h-0">
+                            (props.slot)
+                        </div>
 
-                    <nav id="mobile-nav" class="md:hidden dock dock-sm static bg-base-200 justify-center border-t border-stone-800">
-                        <a class=(m_notes) href="/">
-                            <span class="icon-[material-symbols--note-stack-outline] my-1.5 inline-block size-5"></span>
-                        </a>
-                        <a class=(m_games) href="/games">
-                            <span class="icon-[material-symbols--stadia-controller-outline] my-1.5 inline-block size-5"></span>
-                        </a>
-                        <a class=(m_movies) href="/movies">
-                            <span class="icon-[material-symbols--movie-outline] my-1.5 inline-block size-5"></span>
-                        </a>
-                    </nav>
-                </div>
+                        <nav id="mobile-nav" "hx-boost:inherited"="true" class="md:hidden static justify-center bg-base-200 border-base-300 border-t dock dock-sm">
+                            (mobile_bar_link(&props.path, "/", "Notes"))
+                            (mobile_bar_link(&props.path, "/games", "Games"))
+                            (mobile_bar_link(&props.path, "/movies", "Movies"))
+                        </nav>
 
-                <dialog id="confirm-modal" class="modal">
-                    <div class="modal-box">
-                        <h3 class="text-lg font-bold">"Are you sure?"</h3>
-                        <p class="py-4">
-                            "You are about to delete this folder and all its contents. This action cannot be undone."
-                        </p>
-                        <div class="modal-action">
-                            <form method="dialog">
-                                <button type="submit" class="btn btn-ghost">"Cancel"</button>
-                            </form>
-                            <button class="btn btn-primary">"Confirm"</button>
+                        <div class="text-sm" x-data>
+	                        <div class="flex items-center bg-base-300 border-neutral border-t">
+	                            <button class="bg-primary px-2.5 font-medium text-primary-content cursor-pointer"
+	                            	"x-bind"="$store.statusBar.modeButton"
+	                            	x-text="$store.statusBar.mode"
+	                             	@click="$store.statusBar.toggleMode()"
+	                            >
+	                            	NORMAL
+	                             </button>
+	                            <span class="px-2.5 truncate" x-text="$store.statusBar.url"></span>
+	                            <span class="flex gap-2.5 ml-auto px-2.5">
+	                                <span>"12:4"</span>
+	                            </span>
+	                        </div>
+							<div class="bg-base-100 px-2.5 text-error text-sm h-5" x-text="$store.statusBar.error"></div>
                         </div>
                     </div>
-                </dialog>
+                </div>
+
             </body>
         </html>
     }.render()

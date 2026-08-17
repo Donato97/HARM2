@@ -27,12 +27,6 @@ pub mod features {
         pub mod handlers;
         pub mod views;
     }
-    pub mod file_system {
-        pub mod handlers;
-        pub mod models;
-        pub mod repositories;
-        pub mod services;
-    }
     pub mod notes {
         pub mod handlers;
         pub mod models;
@@ -54,11 +48,11 @@ use axum::{
 
 pub use state::CustomPool;
 
-use crate::features::{auth, editor, file_system, movies, notes};
+use crate::features::{auth, editor, movies, notes};
 
 pub fn router() -> Router {
     let notes_router = Router::new()
-        .route("/api/files/{id}", put(notes::handlers::update))
+        .route("/api/file/{id}", put(notes::handlers::update))
         .layer(DefaultBodyLimit::max(10 * 1024 * 1024)); // 10 MB
 
     let other_router = Router::new()
@@ -66,14 +60,12 @@ pub fn router() -> Router {
         .route("/movies", get(movies::handlers::index))
         .route("/sign-up", get(auth::handlers::sign_up))
         .route("/sign-in", get(auth::handlers::sign_in))
-        .route("/api/filesystem", get(file_system::handlers::index))
-        .route("/api/filesystem", post(file_system::handlers::create))
-        .route("/api/filesystem/{id}", put(file_system::handlers::update))
-        .route(
-            "/api/filesystem/{id}",
-            delete(file_system::handlers::delete),
-        )
-        .route("/api/files/{id}", get(notes::handlers::find));
+        .route("/filesystem", post(editor::handlers::create))
+        .route("/filesystem/{id}", put(editor::handlers::update))
+        .route("/filesystem/{id}", delete(editor::handlers::delete))
+        .route("/file/{id}", get(editor::handlers::index))
+        .route("/api/file/{id}", get(notes::handlers::find))
+        .route("/api/file/{id}/save", put(notes::handlers::update));
 
     Router::new().merge(notes_router).merge(other_router)
 }
