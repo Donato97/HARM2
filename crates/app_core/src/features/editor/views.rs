@@ -1,13 +1,13 @@
 use super::models::{Node, Subtree, Tree};
 use crate::layouts;
-use hypertext::{prelude::*, Raw};
+use hypertext::{Raw, prelude::*};
 
 pub struct Props<'a> {
     pub tree: Tree<'a>,
 }
 
 pub fn file_button(id: &str, name: &str) -> Raw<String> {
-    let url = format!("/file/{id}");
+    let url = format!("/editor/{id}");
     let api = format!("/api/file/{id}");
 
     rsx! {
@@ -141,13 +141,16 @@ pub fn index(props: Props<'_>) -> Rendered<String> {
                     <span class="size-4 icon-[material-symbols--menu]"></span>
                 </label>
 
-                <div x-data="editor" class="flex flex-col min-h-full grow shrink-0" x-cloak>
+                <div x-data="editor" class="flex flex-col min-h-full grow shrink-0 prose prose-lg mx-auto py-14" x-cloak>
+                    <h1 x-text="$store.editor.title"></h1>
+
                     <div
+                        x-cloak
                         x-show="$store.editor.activeId"
                         x-ref="element"
-                        class="mx-auto py-14 min-h-full w-full prose prose-lg shrink-0"></div>
+                        class="min-h-full w-full shrink-0"></div>
 
-                    <p x-show="!$store.editor.activeId" class="opacity-60 m-auto">
+                    <p x-cloak x-show="!$store.editor.activeId" class="opacity-60 m-auto">
                         "Nessuna nota selezionata"
                     </p>
                 </div>

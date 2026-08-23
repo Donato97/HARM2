@@ -1,5 +1,6 @@
 import htmx from "htmx.org";
 import { html } from "../utils";
+import { store } from "./store";
 
 type Type = "file" | "folder"
 
@@ -125,7 +126,8 @@ export function node(root: HTMLElement,) {
                 values: { name, type_: type },
                 target: form,
                 swap: "outerHTML",
-            });
+			});
+			store().title = name;
         },
         cancelRename(input: HTMLElement) {
             cancelled = true;

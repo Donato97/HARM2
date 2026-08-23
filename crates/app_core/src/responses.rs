@@ -65,6 +65,24 @@ impl From<std::io::Error> for Error {
     }
 }
 
+impl From<validator::ValidationErrors> for Error {
+    fn from(e: validator::ValidationErrors) -> Self {
+        Error::BadRequest(e.to_string().into())
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(e: reqwest::Error) -> Self {
+        Error::Internal(e.into())
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Error::Internal(e.into())
+    }
+}
+
 pub mod markup {
     use super::Error;
     use axum::response::{IntoResponse, Response};
@@ -87,7 +105,7 @@ pub mod markup {
                 Error::NotFound => not_found(),
                 Error::BadRequest(msg) => bad_request(Some(&msg)),
                 Error::Internal(err) => {
-                    eprintln!("{err:?}"); // o tracing::error!
+                    tracing::error!("\n\n{err:?}\n\n");
                     server_error()
                 }
             };
@@ -127,9 +145,9 @@ pub mod markup {
 pub mod api {
     use super::Error;
     use axum::{
+        Json,
         http::StatusCode,
         response::{IntoResponse, Response},
-        Json,
     };
     use serde_json::json;
 

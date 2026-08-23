@@ -2,11 +2,12 @@ use super::auth::models::SessionUser;
 use crate::{responses::Error, state::AppState};
 use anyhow::anyhow;
 use axum::{
-    extract::{Path, Query, Request},
     Form, Json, RequestExt,
+    extract::{Path, Query, Request},
 };
 use serde::de::DeserializeOwned;
 use std::{collections::HashMap, future::Future};
+use validator::Validate;
 
 pub trait RequestContext {
     fn state(&mut self) -> Result<AppState, Error>;
@@ -15,6 +16,9 @@ pub trait RequestContext {
         &mut self,
     ) -> impl Future<Output = Result<T, Error>>;
     fn params(&mut self) -> impl Future<Output = Result<HashMap<String, String>, Error>>;
+    fn query<T: DeserializeOwned + Validate + Send + 'static>(
+        &mut self,
+    ) -> impl Future<Output = Result<T, Error>>;
     fn body<T: DeserializeOwned + 'static>(self) -> impl Future<Output = Result<T, Error>>;
     fn form<T: DeserializeOwned + 'static>(self) -> impl Future<Output = Result<T, Error>>;
 }
@@ -43,6 +47,12 @@ impl RequestContext for Request {
         let Query(params) = self.extract_parts::<Query<_>>().await?;
 
         Ok(params)
+    }
+
+    async fn query<T: DeserializeOwned + Validate + Send + 'static>(&mut self) -> Result<T, Error> {
+        let Query(value) = self.extract_parts::<Query<T>>().await?;
+        value.validate()?;
+        Ok(value)
     }
 
     async fn body<T: DeserializeOwned + 'static>(self) -> Result<T, Error> {

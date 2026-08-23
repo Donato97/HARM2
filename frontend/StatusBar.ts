@@ -6,13 +6,24 @@ type StatusBarStore = {
 	url: string;
 	error: string;
 	modeButton: {};
-	toggleMode(): Promise<void>;
+	init(): void;
+	setMode(mode: Mode): void;
 	setUrl(newUrl: string): void;
 	setError(error: string): void;
-	resetMode(): Promise<void>;
 };
 
-export const statusBarStore = () => Alpine.store("statusBar") as StatusBarStore;
+function hasCaret(el: HTMLElement) {
+	const hasContenteditable = () => el.contentEditable === "true";
+
+	switch (el.tagName) {
+		case "INPUT":
+			return true;
+		case "DIV":
+			return hasContenteditable();
+		default:
+			return false;
+	}
+}
 
 Alpine.store("statusBar", {
 	mode: "NORMAL",
@@ -29,28 +40,26 @@ Alpine.store("statusBar", {
 			};
 		},
 	},
-	async toggleMode() {
-		const currentUri = window.location.pathname;
-		if (currentUri.includes("/file/")) {
-			const { editor } = await import("./editor/index");
-			editor.setEditable(!editor.isEditable);
-			this.mode = editor.isEditable ? "INSERT" : "NORMAL";
-		}
-	},
-	async resetMode() {
-		const currentUri = window.location.pathname;
-		if (currentUri.includes("/file/")) {
-			const { editor } = await import("./editor/index");
-			editor.setEditable(false);
-		}
 
-		this.mode = "NORMAL";
+	init() {
+		document.addEventListener("focusin", (e) => {
+			if (hasCaret(e.target as HTMLElement)) {
+				this.setMode("INSERT");
+			}
+		});
+		document.addEventListener("focusout", (e) => {
+			this.setMode("NORMAL");
+		});
+	},
+	setMode(mode: Mode) {
+		this.mode = mode;
 	},
 	setUrl(newUrl: string) {
 		this.url = newUrl;
-		this.resetMode();
 	},
 	setError(error: string) {
 		this.error = error;
 	},
 } satisfies StatusBarStore);
+
+export const statusBarStore = () => Alpine.store("statusBar") as StatusBarStore;

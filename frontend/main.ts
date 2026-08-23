@@ -4,9 +4,10 @@ import htmx from "htmx.org";
 import "./editor/file";
 import "./editor/folder";
 import "./StatusBar";
-import { create_editor, editor } from "./editor/index";
 import { store } from "./editor/store";
 import { statusBarStore } from "./StatusBar";
+import { Editor } from "@tiptap/core";
+import focus from "@alpinejs/focus";
 
 declare global {
 	interface Window {
@@ -19,17 +20,15 @@ htmx.config.noSwap.push(
 );
 
 Alpine.data("editor", () => {
-	return {
-		updatedAt: Date.now(),
-		init() {
-			create_editor(this.$refs.element, this);
+	let editor: Editor;
 
-			const id = location.pathname.split("/file/")[1];
+	return {
+		async init() {
+			const { getEditor } = await import("./editor/index");
+			editor = getEditor()!;
+
+			const id = location.pathname.split("/editor/")[1];
 			if (id) htmx.ajax("GET", `/api/file/${id}`, { swap: "none" });
-		},
-		isEmpty() {
-			this.updatedAt;
-			return editor.isEmpty;
 		},
 		isLoaded() {
 			return editor;
@@ -49,6 +48,7 @@ Alpine.data("editor", () => {
 	};
 });
 
+Alpine.plugin(focus);
 window.Alpine = Alpine;
 Alpine.start();
 
@@ -56,8 +56,8 @@ htmx.on("htmx:after:request", (e: any) => {
 	const { action, method } = e.detail.ctx.request;
 	if (method !== "GET" || !action.startsWith("/api/file/")) return;
 
-	const { content } = JSON.parse(e.detail.ctx.text);
-	store().set(action.split("/api/file/")[1], content);
+	const { name, content } = JSON.parse(e.detail.ctx.text);
+	store().set({ id: action.split("/api/file/")[1], title: name, content });
 });
 
 htmx.on("htmx:before:history:restore", (e: any) => {
@@ -67,11 +67,11 @@ htmx.on("htmx:before:history:restore", (e: any) => {
 	const mounted = !!document.querySelector('[x-data="editor"]');
 
 	// entrare o uscire dalla sezione note: ripristino normale di htmx
-	if (!mounted || (path !== "/" && !path.startsWith("/file/"))) return;
+	if (!mounted || (path !== "/" && !path.startsWith("/editor/"))) return;
 
 	e.preventDefault();
 
-	const id = path.split("/file/")[1];
+	const id = path.split("/editor/")[1];
 	if (id) {
 		return htmx.ajax("GET", `/api/file/${id}`, { swap: "none" });
 	}

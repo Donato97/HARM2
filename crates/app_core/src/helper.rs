@@ -1,3 +1,10 @@
+use time::{OffsetDateTime, PrimitiveDateTime};
+
+pub fn now() -> PrimitiveDateTime {
+    let now = OffsetDateTime::now_utc();
+    PrimitiveDateTime::new(now.date(), now.time())
+}
+
 pub mod vite {
     use hypertext::prelude::*;
     use serde::Deserialize;

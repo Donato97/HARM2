@@ -4,7 +4,20 @@
       "WebSearch",
       "Read(//c/Users/Donato Bitetto/dev_kb/**)",
       "Bash(ls solutions/)",
-      "WebFetch(domain:claude.ai)"
+      "WebFetch(domain:claude.ai)",
+      "Bash(ls ~/.cargo/registry/src/*/ | grep -i \"^hypertext\")",
+      "mcp__claude_ai_Notion__notion-search",
+      "Read(//c/Users/giott/.cargo/registry/src/**)",
+      "Bash(sed -n '1,60p' ~/.cargo/registry/src/*/validator-0.21.0/Cargo.toml)",
+      "Bash(sed -n '80,95p' ~/.cargo/registry/src/*/sea-query-binder-0.7.0/src/sqlx_sqlite.rs)",
+      "Bash(sed -n '/^\\\\[features\\\\]/,/^\\\\[/p' ~/.cargo/registry/src/*/sea-query-binder-0.7.0/Cargo.toml)",
+      "Bash(sed -n '160,235p' ~/.cargo/registry/src/*/sqlx-sqlite-0.8.*/src/types/time.rs)",
+      "Bash(sed -n '50,80p' ~/.cargo/registry/src/*/sqlx-sqlite-0.8.*/src/types/time.rs)",
+      "Bash(sed -n '1,120p' ~/.cargo/registry/src/*/sqlx-core-0.8.*/src/logger.rs)",
+      "Bash(echo \"=== exit: $? ===\")",
+      "Bash(grep -a -o \"CREATE TABLE \\\\\"\\\\?steam_search_cache\\\\\"\\\\?[^\\\\x00]\\\\{0,300\\\\}\" C:/Users/giott/Desktop/DEV/HARM2/crates/web/db.sqlite)",
+      "Bash(grep -a -o -P 'CREATE TABLE \"steam_search_cache\".{0,400}' C:/Users/giott/Desktop/DEV/HARM2/crates/web/db.sqlite)",
+      "Bash(grep -rn '$refs\\\\|AlpineComponent\\\\|magics' /c/Users/giott/Desktop/DEV/HARM2/node_modules/@types/alpinejs/index.d.ts)"
     ]
   }
 }

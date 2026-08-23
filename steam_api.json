@@ -1,0 +1,712 @@
+[
+	{
+		"name": "IWishlistService",
+		"methods": [
+			{
+				"name": "GetWishlistSortedFiltered",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Get a user's paginated wishlist applying various sorts and filters",
+				"parameters": [
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false
+					},
+					{
+						"name": "context",
+						"type": "{message}",
+						"optional": false
+					},
+					{
+						"name": "data_request",
+						"type": "{message}",
+						"optional": false,
+						"description": "If passed, item data will be returned"
+					},
+					{
+						"name": "sort_order",
+						"type": "{enum}",
+						"optional": true
+					},
+					{
+						"name": "filters",
+						"type": "{message}",
+						"optional": false
+					},
+					{
+						"name": "start_index",
+						"type": "int32",
+						"optional": true,
+						"description": "Data in this range will be filled in with StoreBrowse data"
+					},
+					{
+						"name": "page_size",
+						"type": "int32",
+						"optional": true
+					},
+					{
+						"name": "share_token",
+						"type": "string",
+						"optional": false,
+						"description": "The wishlist share token. Determines what items are visible and the effective filters."
+					}
+				]
+			},
+			{
+				"name": "GetWishlist",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Get a user's wishlist.",
+				"parameters": [
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false
+					}
+				]
+			},
+			{
+				"name": "GetWishlistItemCount",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Get the number of items on a user's wishlist.",
+				"parameters": [
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false
+					}
+				]
+			}
+		]
+	},
+	{
+		"name": "IPlayerService",
+		"methods": [
+			{
+				"name": "IsPlayingSharedGame",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Obsolete, partners should use ISteamUser.CheckAppOwnership",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "Access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "The player we're asking about"
+					},
+					{
+						"name": "appid_playing",
+						"type": "uint32",
+						"optional": false,
+						"description": "The game player is currently playing"
+					}
+				]
+			},
+			{
+				"name": "RecordOfflinePlaytime",
+				"version": 1,
+				"httpmethod": "POST",
+				"description": "Tracks playtime for a user when they are offline",
+				"parameters": [
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false
+					},
+					{
+						"name": "ticket",
+						"type": "string",
+						"optional": false
+					},
+					{
+						"name": "play_sessions",
+						"type": "{message}",
+						"optional": false
+					}
+				]
+			},
+			{
+				"name": "GetRecentlyPlayedGames",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Gets information about a player's recently played games",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "Access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "The player we're asking about"
+					},
+					{
+						"name": "count",
+						"type": "uint32",
+						"optional": false,
+						"description": "The number of games to return (0/unset: all)"
+					}
+				]
+			},
+			{
+				"name": "GetOwnedGames",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Return a list of games owned by the player",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "Access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "The player we're asking about"
+					},
+					{
+						"name": "include_appinfo",
+						"type": "bool",
+						"optional": false,
+						"description": "true if we want additional details (name, icon) about each game"
+					},
+					{
+						"name": "include_played_free_games",
+						"type": "bool",
+						"optional": false,
+						"description": "Free games are excluded by default.  If this is set, free games the user has played will be returned."
+					},
+					{
+						"name": "appids_filter",
+						"type": "uint32",
+						"optional": false,
+						"description": "if set, restricts result set to the passed in apps"
+					},
+					{
+						"name": "include_free_sub",
+						"type": "bool",
+						"optional": false,
+						"description": "Some games are in the free sub, which are excluded by default."
+					},
+					{
+						"name": "skip_unvetted_apps",
+						"type": "bool",
+						"optional": true,
+						"description": "if set, skip unvetted store apps"
+					},
+					{
+						"name": "language",
+						"type": "string",
+						"optional": false,
+						"description": "Will return appinfo in this language"
+					},
+					{
+						"name": "include_extended_appinfo",
+						"type": "bool",
+						"optional": false,
+						"description": "true if we want even more details (capsule, sortas, and capabilities) about each game.  include_appinfo must also be true."
+					}
+				]
+			},
+			{
+				"name": "GetSteamLevel",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Returns the Steam Level of a user",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "Access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "The player we're asking about"
+					}
+				]
+			},
+			{
+				"name": "GetBadges",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Gets badges that are owned by a specific user",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "Access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "The player we're asking about"
+					}
+				]
+			},
+			{
+				"name": "GetCommunityBadgeProgress",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Gets all the quests needed to get the specified badge, and which are completed",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "Access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "The player we're asking about"
+					},
+					{
+						"name": "badgeid",
+						"type": "int32",
+						"optional": false,
+						"description": "The badge we're asking about"
+					}
+				]
+			}
+		]
+	},
+	{
+		"name": "ISteamUserStats",
+		"methods": [
+			{
+				"name": "GetGlobalAchievementPercentagesForApp",
+				"version": 1,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "gameid",
+						"type": "uint64",
+						"optional": false,
+						"description": "GameID to retrieve the achievement percentages for"
+					}
+				]
+			},
+			{
+				"name": "GetGlobalAchievementPercentagesForApp",
+				"version": 2,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "gameid",
+						"type": "uint64",
+						"optional": false,
+						"description": "GameID to retrieve the achievement percentages for"
+					}
+				]
+			},
+			{
+				"name": "GetGlobalStatsForGame",
+				"version": 1,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "AppID that we're getting global stats for"
+					},
+					{
+						"name": "count",
+						"type": "uint32",
+						"optional": false,
+						"description": "Number of stats get data for"
+					},
+					{
+						"name": "name[0]",
+						"type": "string",
+						"optional": false,
+						"description": "Names of stat to get data for"
+					},
+					{
+						"name": "startdate",
+						"type": "uint32",
+						"optional": true,
+						"description": "Start date for daily totals (unix epoch timestamp)"
+					},
+					{
+						"name": "enddate",
+						"type": "uint32",
+						"optional": true,
+						"description": "End date for daily totals (unix epoch timestamp)"
+					}
+				]
+			},
+			{
+				"name": "GetNumberOfCurrentPlayers",
+				"version": 1,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "AppID that we're getting user count for"
+					}
+				]
+			},
+			{
+				"name": "GetPlayerAchievements",
+				"version": 1,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "SteamID of user"
+					},
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "AppID to get achievements for"
+					},
+					{
+						"name": "l",
+						"type": "string",
+						"optional": true,
+						"description": "Language to return strings for"
+					}
+				]
+			},
+			{
+				"name": "GetSchemaForGame",
+				"version": 1,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "access key"
+					},
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "appid of game"
+					},
+					{
+						"name": "l",
+						"type": "string",
+						"optional": true,
+						"description": "localized langauge to return (english, french, etc.)"
+					}
+				]
+			},
+			{
+				"name": "GetSchemaForGame",
+				"version": 2,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "access key"
+					},
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "appid of game"
+					},
+					{
+						"name": "l",
+						"type": "string",
+						"optional": true,
+						"description": "localized language to return (english, french, etc.)"
+					}
+				]
+			},
+			{
+				"name": "GetUserStatsForGame",
+				"version": 1,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "SteamID of user"
+					},
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "appid of game"
+					}
+				]
+			},
+			{
+				"name": "GetUserStatsForGame",
+				"version": 2,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "access key"
+					},
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false,
+						"description": "SteamID of user"
+					},
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "appid of game"
+					}
+				]
+			}
+		]
+	},
+	{
+		"name": "ISteamNews",
+		"methods": [
+			{
+				"name": "GetNewsForApp",
+				"version": 1,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "AppID to retrieve news for"
+					},
+					{
+						"name": "maxlength",
+						"type": "uint32",
+						"optional": true,
+						"description": "Maximum length for the content to return, if this is 0 the full content is returned, if it's less then a blurb is generated to fit."
+					},
+					{
+						"name": "enddate",
+						"type": "uint32",
+						"optional": true,
+						"description": "Retrieve posts earlier than this date (unix epoch timestamp)"
+					},
+					{
+						"name": "count",
+						"type": "uint32",
+						"optional": true,
+						"description": "# of posts to retrieve (default 20)"
+					},
+					{
+						"name": "tags",
+						"type": "string",
+						"optional": true,
+						"description": "Comma-separated list of tags to filter by (e.g. 'patchnodes')"
+					}
+				]
+			},
+			{
+				"name": "GetNewsForApp",
+				"version": 2,
+				"httpmethod": "GET",
+				"parameters": [
+					{
+						"name": "appid",
+						"type": "uint32",
+						"optional": false,
+						"description": "AppID to retrieve news for"
+					},
+					{
+						"name": "maxlength",
+						"type": "uint32",
+						"optional": true,
+						"description": "Maximum length for the content to return, if this is 0 the full content is returned, if it's less then a blurb is generated to fit."
+					},
+					{
+						"name": "enddate",
+						"type": "uint32",
+						"optional": true,
+						"description": "Retrieve posts earlier than this date (unix epoch timestamp)"
+					},
+					{
+						"name": "count",
+						"type": "uint32",
+						"optional": true,
+						"description": "# of posts to retrieve (default 20)"
+					},
+					{
+						"name": "feeds",
+						"type": "string",
+						"optional": true,
+						"description": "Comma-separated list of feed names to return news for"
+					},
+					{
+						"name": "tags",
+						"type": "string",
+						"optional": true,
+						"description": "Comma-separated list of tags to filter by (e.g. 'patchnodes')"
+					}
+				]
+			}
+		]
+	},
+	{
+		"name": "IStoreService",
+		"methods": [
+			{
+				"name": "GetGamesFollowed",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Get the list of games a user is following",
+				"parameters": [
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false
+					}
+				]
+			},
+			{
+				"name": "GetGamesFollowedCount",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Get the number of games a user is following",
+				"parameters": [
+					{
+						"name": "steamid",
+						"type": "uint64",
+						"optional": false
+					}
+				]
+			},
+			{
+				"name": "GetAppList",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Gets a list of apps available on the Steam Store.",
+				"parameters": [
+					{
+						"name": "key",
+						"type": "string",
+						"optional": false,
+						"description": "Access key"
+					},
+					{
+						"name": "if_modified_since",
+						"type": "uint32",
+						"optional": true,
+						"description": "Return only items that have been modified since this date."
+					},
+					{
+						"name": "have_description_language",
+						"type": "string",
+						"optional": true,
+						"description": "Return only items that have a description in this language."
+					},
+					{
+						"name": "include_games",
+						"type": "bool",
+						"optional": true,
+						"description": "Include games (defaults to enabled)"
+					},
+					{
+						"name": "include_dlc",
+						"type": "bool",
+						"optional": true,
+						"description": "Include DLC"
+					},
+					{
+						"name": "include_software",
+						"type": "bool",
+						"optional": true,
+						"description": "Include software items"
+					},
+					{
+						"name": "include_videos",
+						"type": "bool",
+						"optional": true,
+						"description": "Include videos and series"
+					},
+					{
+						"name": "include_hardware",
+						"type": "bool",
+						"optional": true,
+						"description": "Include hardware"
+					},
+					{
+						"name": "last_appid",
+						"type": "uint32",
+						"optional": true,
+						"description": "For continuations, this is the last appid returned from the previous call."
+					},
+					{
+						"name": "max_results",
+						"type": "uint32",
+						"optional": true,
+						"description": "Number of results to return at a time.  Default 10k, max 50k."
+					}
+				]
+			},
+			{
+				"name": "GetRecommendedTagsForUser",
+				"version": 1,
+				"httpmethod": "GET",
+				"description": "Get a set of tags that are recommended for the user based on recent playtime.",
+				"parameters": [
+					{
+						"name": "language",
+						"type": "string",
+						"optional": false
+					},
+					{
+						"name": "country_code",
+						"type": "string",
+						"optional": false
+					},
+					{
+						"name": "favor_rarer_tags",
+						"type": "bool",
+						"optional": false,
+						"description": "Biases tags towards tags that are less common. e.g. Favor Zombies over Action if the user plays the same number of games with both tags."
+					}
+				]
+			}
+		]
+	}
+]

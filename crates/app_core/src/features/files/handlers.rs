@@ -1,6 +1,6 @@
 use super::models::Notes;
 use crate::{request::RequestContext, responses::api::ApiResponse};
-use axum::{extract::Request, response::IntoResponse, Json};
+use axum::{Json, extract::Request, response::IntoResponse};
 use sea_query::{Expr, Query};
 
 #[derive(Debug, serde::Deserialize)]
@@ -14,10 +14,11 @@ pub async fn find(mut req: Request) -> ApiResponse {
     let state = req.state()?;
 
     let query = Query::select()
-        .columns(["content"])
+        .columns(["name", "content"])
         .from("notes")
-        .and_where(Expr::col("id").eq(id))
-        .and_where(Expr::col("user_id").eq(user.id))
+        .left_join("nodes", Expr::col(("notes", "id")).equals(("nodes", "id")))
+        .and_where(Expr::col(("notes", "id")).eq(id))
+        .and_where(Expr::col(("notes", "user_id")).eq(user.id))
         .to_owned();
 
     let result: Notes = state.exe_select(query).await?;

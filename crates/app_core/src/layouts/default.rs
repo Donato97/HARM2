@@ -1,4 +1,4 @@
-use hypertext::{prelude::*, Raw};
+use hypertext::prelude::*;
 
 use crate::helper::vite::load_manifest_entry;
 
@@ -7,7 +7,8 @@ pub struct Props<S: Renderable> {
     pub path: String,
 }
 
-fn mobile_bar_link(current_path: &str, href: &str, text: &str) -> Raw<String> {
+#[component]
+fn mobile_bar_link<'a>(current_path: &String, href: &'a str, text: &'a str) -> impl Renderable {
     let current_path = current_path.strip_prefix("/").unwrap_or("");
     let href_path = href.strip_prefix("/").unwrap_or("");
 
@@ -22,26 +23,51 @@ fn mobile_bar_link(current_path: &str, href: &str, text: &str) -> Raw<String> {
             <span class="inline-block my-1.5 size-5 icon-[material-symbols--note-stack-outline]"></span>
             <span class="dock-label">(text)</span>
         </a>
-    }.memoize()
+    }
+}
+
+#[component]
+fn bar_link<'a>(current_path: &String, href: &'a str, icon: &'a str) -> impl Renderable {
+    let current_path = current_path.strip_prefix("/").unwrap_or("");
+    let href_path = href.strip_prefix("/").unwrap_or("");
+
+    let class = if current_path == href_path {
+        "menu-active text-primary"
+    } else {
+        ""
+    };
+
+    rsx! {
+        <a class=(class) href=(href)>
+            <span class=(format!("inline-block my-1.5 size-5 {icon}"))></span>
+        </a>
+    }
+}
+
+#[component]
+fn status_bar() -> impl Renderable {
+    rsx! {
+        <div x-data>
+           <div class="flex items-center bg-base-300 border-neutral border-t">
+               <div class="bg-primary px-2.5 font-medium text-primary-content cursor-pointer"
+                   "x-bind"="$store.statusBar.modeButton"
+                   x-text="$store.statusBar.mode">
+                   NORMAL
+                </div>
+
+               <span class="px-2.5 truncate" x-text="$store.statusBar.url"></span>
+
+               <span class="flex gap-2.5 ml-auto px-2.5">
+                   <span>"12:4"</span>
+               </span>
+            </div>
+
+            <div class="bg-base-100 px-2.5 text-error text-sm h-6" x-text="$store.statusBar.error"></div>
+        </div>
+    }
 }
 
 pub fn default<S: Renderable>(props: Props<S>) -> Rendered<String> {
-    let d_notes = if props.path.is_empty() {
-        "menu-active text-primary"
-    } else {
-        ""
-    };
-    let d_games = if props.path == "/games" {
-        "menu-active text-primary"
-    } else {
-        ""
-    };
-    let d_movies = if props.path == "/movies" {
-        "menu-active text-primary"
-    } else {
-        ""
-    };
-
     rsx! {
         <!DOCTYPE html>
         <html lang="it" "data-theme"="tui">
@@ -60,19 +86,13 @@ pub fn default<S: Renderable>(props: Props<S>) -> Rendered<String> {
 
                         <ul "hx-boost:inherited"="true" class="menu">
                             <li>
-                                <a class=(d_notes) href="/">
-                                    <span class="inline-block my-1.5 size-5 icon-[material-symbols--note-stack-outline]"></span>
-                                </a>
+                            	<BarLink current_path=(props.path.to_owned()) href="/" icon="icon-[material-symbols--note-stack-outline]" />
                             </li>
                             <li>
-                                <a class=(d_games) href="/games">
-                                    <span class="inline-block my-1.5 size-5 icon-[material-symbols--stadia-controller-outline]"></span>
-                                </a>
+                            	<BarLink current_path=(props.path.to_owned()) href="/games" icon="icon-[material-symbols--stadia-controller-outline]" />
                             </li>
                             <li>
-                                <a class=(d_movies) href="/movies">
-                                    <span class="inline-block my-1.5 size-5 icon-[material-symbols--movie-outline]"></span>
-                                </a>
+                                <BarLink current_path=(props.path.to_owned()) href="/movies" icon="icon-[material-symbols--movie-outline]" />
                             </li>
                         </ul>
                     </nav>
@@ -83,27 +103,12 @@ pub fn default<S: Renderable>(props: Props<S>) -> Rendered<String> {
                         </div>
 
                         <nav id="mobile-nav" "hx-boost:inherited"="true" class="md:hidden static justify-center bg-base-200 border-base-300 border-t dock dock-sm">
-                            (mobile_bar_link(&props.path, "/", "Notes"))
-                            (mobile_bar_link(&props.path, "/games", "Games"))
-                            (mobile_bar_link(&props.path, "/movies", "Movies"))
+                        	<MobileBarLink current_path=(props.path.to_owned()) href="/" text="Notes" />
+                         	<MobileBarLink current_path=(props.path.to_owned()) href="/games" text="Games" />
+                         	<MobileBarLink current_path=(props.path.to_owned()) href="/movies" text="Movies" />
                         </nav>
 
-                        <div class="text-sm" x-data>
-	                        <div class="flex items-center bg-base-300 border-neutral border-t">
-	                            <button class="bg-primary px-2.5 font-medium text-primary-content cursor-pointer"
-	                            	"x-bind"="$store.statusBar.modeButton"
-	                            	x-text="$store.statusBar.mode"
-	                             	@click="$store.statusBar.toggleMode()"
-	                            >
-	                            	NORMAL
-	                             </button>
-	                            <span class="px-2.5 truncate" x-text="$store.statusBar.url"></span>
-	                            <span class="flex gap-2.5 ml-auto px-2.5">
-	                                <span>"12:4"</span>
-	                            </span>
-	                        </div>
-							<div class="bg-base-100 px-2.5 text-error text-sm h-5" x-text="$store.statusBar.error"></div>
-                        </div>
+                        <StatusBar />
                     </div>
                 </div>
 

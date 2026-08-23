@@ -9,8 +9,10 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::str::FromStr;
 use time::Duration;
 use tower_http::services::ServeDir;
+use tower_http::trace::TraceLayer;
 use tower_sessions::{cookie::SameSite, Expiry, SessionManagerLayer};
 use tower_sessions_sqlx_store::SqliteStore;
+use tracing_subscriber::EnvFilter;
 
 #[cfg(test)]
 mod tests;
@@ -35,6 +37,12 @@ pub mod features {
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
+
+    tracing_subscriber::fmt()
+        .compact()
+        .with_target(false)
+        .with_env_filter(EnvFilter::new("web=debug,app_core=debug,tower_http=debug"))
+        .init();
 
     // In dev usa SQLite; in prod sostituisci con MySqlPool::connect(...).
     let opts = SqliteConnectOptions::from_str("sqlite://crates/web/db.sqlite")
@@ -67,7 +75,7 @@ async fn main() {
         http_client: client,
     };
 
-    let routes = router(state, session_layer);
+    let routes = router(state, session_layer).layer(TraceLayer::new_for_http().on_request(()));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("Server in ascolto su http://localhost:3000");
@@ -79,7 +87,6 @@ fn router(state: AppState, session_layer: SessionManagerLayer<SqliteStore>) -> R
         .route("/sign-up", post(auth::handlers::sign_up))
         .route("/sign-in", post(auth::handlers::sign_in))
         .route("/sign-out", post(auth::handlers::sign_out))
-        .route("/games", get(games::handlers::index))
         .route("/steam-login", get(games::handlers::steam_login))
         .route("/storage/upload", post(storage::handlers::upload))
         .route(

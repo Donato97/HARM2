@@ -7,15 +7,19 @@ axum = { version = "0.8", features = ["multipart"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tower-http = { version = "0.6", features = ["fs"] }
+tower-http = { version = "0.6", features = ["fs", "trace"] }
 tower-sessions = { version = "0.14" }
 tower-sessions-sqlx-store = { version = "0.15",  features = ["sqlite"] }
 time = "0.3.47"
-sqlx = { version = "0.8.6", features = ["runtime-tokio", "tls-native-tls", "mysql", "sqlite"] }
+sqlx = { version = "0.8.6", features = ["runtime-tokio", "tls-native-tls", "mysql", "sqlite",  "json" ] }
 sea-query = "0.32.7"
-sea-query-binder = { version = "0.7.0", features = ["sqlx", "sqlx-mysql", "sqlx-sqlite"] }
-reqwest = { version = "0.13", features = [ "form" ] }
+sea-query-binder = { version = "0.7.0", features = ["sqlx", "sqlx-mysql", "sqlx-sqlite", "with-time" ] }
+reqwest = { version = "0.13", features = [ "form", "json" ] }
 hypertext = { version = "0.12.1", features = [ "axum", "htmx", "alpine" ] }
 uuid = { version = "1.24.0", features = [ "v4" ] }
 infer = "0.22.0"
 anyhow = "1.0.104"
+validator = { version = "0.21.0", features = ["derive"] }
+
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features=["env-filter"] }

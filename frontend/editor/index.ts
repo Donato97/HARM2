@@ -94,28 +94,25 @@ const FileUploader = FileHandler.configure({
 	},
 });
 
-export let editor: Editor;
+let editor: Editor;
 
-export function create_editor(editorEl: HTMLElement, _this: any) {
+export function getEditor() {
+	const el = document.querySelector('[x-ref="element"]');
+	if (!el) return;
+
+	if (editor?.options.element === el) return editor;
+
+	editor?.destroy();
 	editor = new Editor({
-		element: editorEl,
-		editable: false,
+		element: el,
 		extensions: [
 			StarterKit,
 			Image.configure({ inline: true }),
 			FileUploader,
 			SuggestionMenu,
 		],
-		/* onUpdate: save, */
-		onCreate({ editor }) {
-			_this.updatedAt = Date.now();
-		},
-		onUpdate(props) {
-			save(props);
-			_this.updatedAt = Date.now();
-		},
-		onSelectionUpdate({ editor }) {
-			_this.updatedAt = Date.now();
-		},
+		onUpdate: save,
 	});
+
+	return editor;
 }

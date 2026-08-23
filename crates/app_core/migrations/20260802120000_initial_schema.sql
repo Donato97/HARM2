@@ -26,13 +26,6 @@ CREATE TABLE "nodes" (
     FOREIGN KEY ("parent_id") REFERENCES "nodes" ("id") ON DELETE CASCADE
 );
 
-CREATE TRIGGER "nodes_updated_at"
-AFTER UPDATE ON "nodes"
-FOR EACH ROW
-BEGIN
-    UPDATE "nodes" SET "updated_at" = CURRENT_TIMESTAMP WHERE "id" = NEW."id";
-END;
-
 CREATE TABLE "notes" (
     "id"         VARCHAR(255) NOT NULL PRIMARY KEY,
     "user_id"    INTEGER      NOT NULL,
@@ -42,3 +35,47 @@ CREATE TABLE "notes" (
     FOREIGN KEY ("id")      REFERENCES "nodes" ("id") ON DELETE CASCADE,
     FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
+
+CREATE TABLE "steam_search_cache" (
+    "query"      VARCHAR(255) NOT NULL PRIMARY KEY,
+    "results"    TEXT      	  NOT NULL,
+    "created_at" DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "games" (
+    "id"      	 INTEGER	  NOT NULL PRIMARY KEY,
+    "name"    	 VARCHAR(255) NOT NULL,
+    "assets"	 TEXT		  DEFAULT NULL,
+    "created_at" DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "games_users" (
+    "id"      	 INTEGER	  NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "game_id"    INTEGER	  NOT NULL,
+    "user_id"	 INTEGER	  NOT NULL,
+    "created_at" DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("game_id") REFERENCES "games" ("id") ON DELETE CASCADE,
+    FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX "idx_games_users" ON "games_users" ("user_id", "game_id");
+
+CREATE TRIGGER "nodes_updated_at"
+AFTER UPDATE ON "nodes"
+FOR EACH ROW BEGIN
+    UPDATE "nodes" SET "updated_at" = CURRENT_TIMESTAMP WHERE "id" = NEW."id";
+END;
+
+CREATE TRIGGER "games_updated_at"
+AFTER UPDATE ON "games"
+FOR EACH ROW BEGIN
+    UPDATE "games" SET "updated_at" = CURRENT_TIMESTAMP WHERE "id" = NEW."id";
+END;
+
+CREATE TRIGGER "games_users_updated_at"
+AFTER UPDATE ON "games_users"
+FOR EACH ROW BEGIN
+    UPDATE "games_users" SET "updated_at" = CURRENT_TIMESTAMP WHERE "id" = NEW."id";
+END;

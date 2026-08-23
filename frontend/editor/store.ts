@@ -1,21 +1,38 @@
 import Alpine from "alpinejs";
-import { editor } from "./index";
 
-const editorStore = {
-    activeId: null as string | null,
+type SetProps = {
+	id: string;
+	title: string;
+	content: string;
+};
 
-    set(id: string, content: string | null) {
-        this.activeId = id;
-        editor.commands.setContent(content ? JSON.parse(content) : '');
-    },
-    unset() {
-        this.activeId = null;
-        editor.commands.clearContent();
-    },
-}
+type EditorStore = {
+	activeId: string | null;
+	title: string | null;
+	set(props: SetProps): Promise<void>;
+	unset(): Promise<void>;
+};
 
-Alpine.store('editor', editorStore);
+const editorStore: EditorStore = {
+	title: null as string | null,
+	activeId: null as string | null,
 
-export function store() {
-    return Alpine.store('editor') as any;
-}
+	async set({ id, title, content }: SetProps) {
+		const { getEditor } = await import("./index");
+
+		this.activeId = id;
+		this.title = title;
+		getEditor()?.commands.setContent(content ? JSON.parse(content) : "");
+	},
+	async unset() {
+		const { getEditor } = await import("./index");
+
+		this.activeId = null;
+		this.title = null;
+		getEditor()?.commands.clearContent();
+	},
+};
+
+Alpine.store("editor", editorStore);
+
+export const store = () => Alpine.store("editor") as EditorStore;

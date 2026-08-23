@@ -25,7 +25,10 @@ pub fn index(props: Props) -> Rendered<String> {
     };
 
     match props.user.steam_id {
-        Some(_steam_id) => games::views::index(games::views::Props { path: props.path }),
+        Some(_steam_id) => games::views::index(games::views::Props {
+            path: props.path,
+            search_results: Vec::new(),
+        }),
         None => layouts::default(layouts::default::Props {
             slot: markup,
             path: props.path,
