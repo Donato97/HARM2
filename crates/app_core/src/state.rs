@@ -1,6 +1,6 @@
 use sea_query::{MysqlQueryBuilder, QueryBuilder, QueryStatementBuilder, SqliteQueryBuilder};
 use sea_query_binder::SqlxValues;
-use sqlx::{mysql::MySqlRow, sqlite::SqliteRow, FromRow};
+use sqlx::{FromRow, mysql::MySqlRow, sqlite::SqliteRow};
 
 #[derive(Clone, Debug)]
 pub enum CustomPool {
@@ -58,6 +58,25 @@ impl AppState {
                 .execute(pool)
                 .await?
                 .last_insert_id(),
+        };
+
+        Ok(id)
+    }
+
+    pub async fn exe_insert_affected<S>(&self, stmt: S) -> Result<u64, sqlx::Error>
+    where
+        S: QueryStatementBuilder,
+    {
+        let (query, values) = self.build(stmt);
+        let id = match &self.pool {
+            CustomPool::Sqlite(pool) => sqlx::query_with(&query, values)
+                .execute(pool)
+                .await?
+                .last_insert_rowid() as u64,
+            CustomPool::Mysql(pool) => sqlx::query_with(&query, values)
+                .execute(pool)
+                .await?
+                .rows_affected(),
         };
 
         Ok(id)

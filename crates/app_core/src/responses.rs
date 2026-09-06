@@ -5,6 +5,7 @@ use axum::extract::{
     rejection::{FormRejection, JsonRejection, PathRejection, QueryRejection},
 };
 
+#[derive(Debug)]
 pub enum Error {
     NotFound,
     BadRequest(Cow<'static, str>),

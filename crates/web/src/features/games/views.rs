@@ -27,6 +27,8 @@ pub fn index(props: Props) -> Rendered<String> {
     match props.user.steam_id {
         Some(_steam_id) => games::views::index(games::views::Props {
             path: props.path,
+            recents: Vec::new(),
+            games: Vec::new(),
             search_results: Vec::new(),
         }),
         None => layouts::default(layouts::default::Props {

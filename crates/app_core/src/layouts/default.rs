@@ -98,7 +98,7 @@ pub fn default<S: Renderable>(props: Props<S>) -> Rendered<String> {
                     </nav>
 
                     <div id="content" class="flex flex-col flex-1 h-full min-h-0">
-                        <div class="flex flex-1 min-h-0">
+                        <div class="flex flex-1 min-h-0 overflow-y-auto">
                             (props.slot)
                         </div>
 

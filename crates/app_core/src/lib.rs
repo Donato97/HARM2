@@ -59,7 +59,9 @@ pub fn router() -> Router {
         .layer(DefaultBodyLimit::max(10 * 1024 * 1024)) // 10 MB
         .route("/api/file/{id}", get(files::handlers::find));
 
-    let games_router = Router::new().route("/games/search", get(games::handlers::search));
+    let games_router = Router::new()
+        .route("/games/search", get(games::handlers::search))
+        .route("/games/{appid}/add", post(games::handlers::add));
 
     let other_router = Router::new()
         .route("/", get(editor::handlers::index))
